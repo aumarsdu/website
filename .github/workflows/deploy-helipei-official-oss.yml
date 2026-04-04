@@ -1,0 +1,40 @@
+name: Deploy helipei-official to Aliyun OSS
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - knowledge/helipei-official/**
+      - .github/workflows/deploy-helipei-official-oss.yml
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-helipei-official-oss
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    defaults:
+      run:
+        working-directory: knowledge/helipei-official
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install -r requirements.txt
+
+      - run: python deploy_aliyun.py
+        env:
+          ALIYUN_ACCESS_KEY_ID: ${{ secrets.ALIYUN_ACCESS_KEY_ID }}
+          ALIYUN_ACCESS_KEY_SECRET: ${{ secrets.ALIYUN_ACCESS_KEY_SECRET }}
+          ALIYUN_OSS_BUCKET: ${{ secrets.ALIYUN_OSS_BUCKET }}
+          ALIYUN_OSS_ENDPOINT: ${{ secrets.ALIYUN_OSS_ENDPOINT }}

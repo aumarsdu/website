@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resources - Helibei Official</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/minimal.css">
+</head>
+<body>
+    <div class="container">
+        <main>
+            <section class="page-header">
+                <h1>Resources</h1>
+                <p>Helpful guides and templates for your journey.</p>
+            </section>
+
+            <section class="resources-section">
+                <ul class="resource-list" id="resource-list">
+                    <!-- Content will be injected by JS -->
+                </ul>
+            </section>
+        </main>
+    </div>
+    <script src="js/siteConfig.js"></script>
+    <script src="js/layout.js"></script>
+    <script>
+        const resourceList = document.getElementById('resource-list');
+        if (siteConfig.resources) {
+            siteConfig.resources.forEach(resource => {
+                const resourceItem = document.createElement('li');
+                resourceItem.className = 'resource-item';
+                resourceItem.innerHTML = `
+                    <span class="resource-type">${resource.type}</span>
+                    <a href="${resource.url}" class="resource-link">${resource.title}</a>
+                `;
+                resourceList.appendChild(resourceItem);
+            });
+        }
+    </script>
+</body>
+</html>

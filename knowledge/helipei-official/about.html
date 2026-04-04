@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us - Helibei Official</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/minimal.css">
+</head>
+<body>
+    <div class="container">
+        <main>
+            <section class="page-header">
+                <h1 id="about-title">About Us</h1>
+                <p id="about-description">Our mission and vision.</p>
+            </section>
+
+            <section class="team-section">
+                <h2>Our Team</h2>
+                <div class="team-grid" id="team-grid">
+                    <!-- Content will be injected by JS -->
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="js/siteConfig.js"></script>
+    <script src="js/layout.js"></script>
+    <script>
+        if (siteConfig.about) {
+            document.getElementById('about-title').textContent = siteConfig.about.title;
+            document.getElementById('about-description').textContent = siteConfig.about.description;
+
+            const teamGrid = document.getElementById('team-grid');
+            if (siteConfig.about.team) {
+                siteConfig.about.team.forEach(member => {
+                    const teamCard = document.createElement('div');
+                    teamCard.className = 'team-card';
+                    teamCard.innerHTML = `
+                        <h3>${member.name}</h3>
+                        <p class="role">${member.role}</p>
+                        <p>${member.bio}</p>
+                    `;
+                    teamGrid.appendChild(teamCard);
+                });
+            }
+        }
+    </script>
+</body>
+</html>

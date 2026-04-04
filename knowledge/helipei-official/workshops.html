@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workshops - Helibei Official</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/minimal.css">
+</head>
+<body>
+    <div class="container">
+        <main>
+            <section class="page-header">
+                <h1>All Workshops</h1>
+                <p>Explore our comprehensive list of workshops designed for your success.</p>
+            </section>
+
+            <section class="workshops-section">
+                <div class="workshop-grid" id="all-workshops">
+                    <!-- Content will be injected by JS -->
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="js/siteConfig.js"></script>
+    <script src="js/layout.js"></script>
+    <script>
+        const workshopsGrid = document.getElementById('all-workshops');
+        if (siteConfig.workshops) {
+            siteConfig.workshops.forEach(workshop => {
+                const workshopCard = document.createElement('div');
+                workshopCard.className = 'workshop-card';
+                workshopCard.innerHTML = `
+                    <img src="${workshop.image}" alt="${workshop.title}" class="workshop-image">
+                    <div class="workshop-content">
+                        <h3>${workshop.title}</h3>
+                        <p>${workshop.description}</p>
+                        <a href="${workshop.url}" class="workshop-link">Learn More</a>
+                    </div>
+                `;
+                workshopsGrid.appendChild(workshopCard);
+            });
+        }
+    </script>
+</body>
+</html>
