@@ -65,9 +65,9 @@ def deploy_to_oss():
 
     for root, dirs, files in os.walk(current_dir):
         # 排除不需要上传的文件和目录
-        if '__pycache__' in root or '.git' in root or '.env' in root:
+        if '__pycache__' in root or '.git' in root or '.env' in root or 'node_modules' in root or 'tools-src' in root:
             continue
-        dirs[:] = [directory for directory in dirs if directory not in {'__pycache__', '.git', 'deploy', '.trae', '.claude'}]
+        dirs[:] = [directory for directory in dirs if directory not in {'__pycache__', '.git', 'deploy', '.trae', '.claude', 'node_modules', 'tools-src'}]
             
         for file in files:
             # 排除脚本本身和配置文件

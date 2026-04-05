@@ -9,6 +9,11 @@ server {
     try_files $uri $uri/ /index.html;
   }
 
+  # React SPA for tools module
+  location /tools {
+    try_files $uri $uri/ /tools/index.html;
+  }
+
   location = /robots.txt {
     try_files $uri =404;
     access_log off;

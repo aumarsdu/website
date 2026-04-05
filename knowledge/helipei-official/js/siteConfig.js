@@ -58,7 +58,7 @@ const siteConfig = {
     { title: "Global Network", description: "Connect with peers and mentors from around the world." }
   ],
   footer: {
-    copyright: "© 2024 Helibei Official. All rights reserved.",
+    copyright: "© 2026 河狸陪 Heilipei. All rights reserved.",
     socialLinks: [
       { name: "Twitter", url: "#" },
       { name: "LinkedIn", url: "#" },

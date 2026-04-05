@@ -6,873 +6,66 @@
   <title>河狸陪 | 怕选错就找河狸陪 — 独立第三方升学规划平台</title>
   <meta name="description" content="河狸陪是独立第三方升学背景提升平台，不绑定任何机构，只站在你的立场。提供科研项目、国际竞赛、实习项目、升学规划等一站式服务，帮你从全市场筛选最匹配的方案。">
   <meta name="keywords" content="河狸陪,Heilipei,升学规划,背景提升,科研项目,国际竞赛,实习项目,留学规划">
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="河狸陪 | 怕选错就找河狸陪 — 独立第三方升学规划平台">
+  <meta property="og:description" content="河狸陪是独立第三方升学背景提升平台，不绑定任何机构，只站在你的立场。提供科研项目、国际竞赛、实习项目、升学规划等一站式服务，帮你从全市场筛选最匹配的方案。">
+  <meta property="og:image" content="https://www.heilipei.com/assets/heilipei-logo.jpeg">
+  <meta property="og:url" content="https://www.heilipei.com/">
+  <meta property="og:type" content="website">
+
+  <!-- JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://www.heilipei.com/#website",
+        "url": "https://www.heilipei.com",
+        "name": "河狸陪",
+        "description": "独立第三方升学背景提升平台，不绑定任何机构，只站在你的立场。",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://www.heilipei.com/search?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      },
+      {
+        "@type": "EducationalOrganization",
+        "@id": "https://www.heilipei.com/#organization",
+        "name": "河狸陪",
+        "url": "https://www.heilipei.com",
+        "logo": "https://www.heilipei.com/assets/heilipei-logo.jpeg",
+        "description": "独立第三方升学背景提升平台，不绑定任何机构，只站在你的立场。",
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "contactType": "customer service",
+          "availableLanguage": "Chinese"
+        }
+      }
+    ]
+  }
+  </script>
+
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="css/minimal.css">
-  <style>
-    :root {
-      --max-width: 1200px;
-      --text-hero: clamp(2.75rem, 6vw, 4.75rem);
-      --text-h1: clamp(2rem, 4vw, 3rem);
-      --text-h2: clamp(1.25rem, 2vw, 1.5rem);
-      --text-h3: 1.25rem;
-      --text-body: 1rem;
-      --text-sm: 0.875rem;
-      --text-xs: 0.75rem;
-      --leading-tight: 1.15;
-      --leading-normal: 1.7;
-      --font-bold: 800;
-      --font-semibold: 600;
-      --radius-md: 10px;
-      --radius-full: 999px;
-      --blue-600: var(--color-primary-dark);
-      --blue-700: var(--color-primary);
-      --blue-50: var(--color-primary-light);
-      --green-600: var(--color-success);
-      --green-50: var(--color-success-bg);
-      --slate-900: var(--color-neutral-900);
-      --slate-700: var(--color-neutral-700);
-      --slate-500: var(--color-neutral-500);
-      --slate-300: var(--color-neutral-300);
-      --slate-50: var(--color-neutral-50);
-      --white: var(--color-white);
-      --amber-500: var(--color-warning);
-      --red-600: var(--color-error);
-      --orange-50: var(--color-accent-orange-bg);
-      --space-2: 8px;
-      --space-3: 12px;
-      --space-4: 16px;
-      --space-5: 20px;
-      --space-6: 24px;
-      --space-8: 32px;
-      --space-10: 40px;
-      --space-12: 48px;
-      --space-14: 56px;
-      --space-16: 64px;
-    }
-
-    html {
-      scroll-behavior: smooth;
-    }
-
-    body {
-      background: var(--white);
-      color: var(--slate-900);
-    }
-
-    a,
-    button {
-      min-height: 44px;
-    }
-
-    a:focus-visible,
-    button:focus-visible {
-      outline: 3px solid rgba(29, 78, 216, 0.24);
-      outline-offset: 3px;
-    }
-
-    .shell {
-      width: min(var(--max-width), calc(100% - 48px));
-      margin: 0 auto;
-    }
-
-    .site-nav {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: rgba(255, 255, 255, 0.9);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid var(--slate-300);
-      transition: box-shadow var(--transition);
-    }
-
-    .site-nav.is-scrolled {
-      box-shadow: var(--shadow-sm);
-    }
-
-    .nav-shell {
-      min-height: 64px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--space-4);
-    }
-
-    .brand-link {
-      display: inline-flex;
-      align-items: center;
-      color: var(--slate-900);
-      text-decoration: none;
-      font-weight: var(--font-bold);
-      font-size: 1.125rem;
-    }
-
-    .brand-mark {
-      width: auto;
-      height: 52px;
-      display: block;
-      object-fit: contain;
-      box-shadow: var(--shadow-sm);
-    }
-
-    .nav-cta,
-    .primary-cta {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 14px 28px;
-      border-radius: var(--radius-full);
-      background: var(--blue-700);
-      color: var(--white);
-      text-decoration: none;
-      font-size: var(--text-body);
-      font-weight: var(--font-semibold);
-      box-shadow: var(--shadow-sm);
-      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-    }
-
-    .nav-cta:hover,
-    .primary-cta:hover {
-      background: var(--blue-600);
-      transform: translateY(-1px);
-      box-shadow: var(--shadow-md);
-    }
-
-    .floating-wechat-button {
-      position: fixed;
-      right: 24px;
-      bottom: 88px;
-      z-index: 110;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      min-height: 48px;
-      padding: 0 18px;
-      border: none;
-      border-radius: var(--radius-full);
-      background: var(--green-600);
-      color: var(--white);
-      box-shadow: 0 16px 32px rgba(22, 163, 74, 0.22);
-      font-size: var(--text-body);
-      font-weight: var(--font-semibold);
-      cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-    }
-
-    .floating-wechat-button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 18px 36px rgba(22, 163, 74, 0.28);
-    }
-
-    .floating-wechat-button:focus-visible {
-      outline-color: rgba(22, 163, 74, 0.28);
-    }
-
-    .wechat-modal {
-      position: fixed;
-      inset: 0;
-      z-index: 120;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-      transition: opacity 0.24s ease, visibility 0.24s ease;
-    }
-
-    .wechat-modal.is-open {
-      opacity: 1;
-      visibility: visible;
-      pointer-events: auto;
-    }
-
-    .wechat-modal-backdrop {
-      position: absolute;
-      inset: 0;
-      border: none;
-      background: rgba(15, 23, 42, 0.52);
-      backdrop-filter: blur(6px);
-      cursor: pointer;
-    }
-
-    .wechat-modal-card {
-      position: relative;
-      z-index: 1;
-      width: min(100%, 420px);
-      background: var(--white);
-      border-radius: 24px;
-      padding: 28px 28px 24px;
-      box-shadow: 0 28px 80px rgba(15, 23, 42, 0.22);
-      border: 1px solid rgba(203, 213, 225, 0.9);
-      text-align: center;
-      transform: translateY(16px) scale(0.98);
-      transition: transform 0.24s ease;
-    }
-
-    .wechat-modal.is-open .wechat-modal-card {
-      transform: translateY(0) scale(1);
-    }
-
-    .wechat-modal-card.is-large {
-      width: min(100%, 560px);
-      padding: 36px 40px 32px;
-    }
-
-    .wechat-modal-close {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      width: 40px;
-      height: 40px;
-      border: none;
-      border-radius: 999px;
-      background: var(--slate-50);
-      color: var(--slate-700);
-      font-size: 1.5rem;
-      line-height: 1;
-      cursor: pointer;
-      transition: background 0.2s ease, color 0.2s ease;
-    }
-
-    .wechat-modal-close:hover {
-      background: var(--blue-50);
-      color: var(--blue-700);
-    }
-
-    .wechat-modal-title {
-      font-size: clamp(1.5rem, 3vw, 2rem);
-      line-height: 1.25;
-      font-weight: var(--font-bold);
-      color: var(--slate-900);
-      margin-right: 36px;
-    }
-
-    .wechat-modal-copy {
-      margin-top: 12px;
-      color: var(--slate-700);
-      font-size: var(--text-body);
-      line-height: var(--leading-normal);
-    }
-
-    .wechat-modal-qr {
-      margin: 28px auto 0;
-      width: min(100%, 260px);
-      padding: 18px;
-      border-radius: 20px;
-      background: var(--white);
-      border: 1px solid var(--slate-300);
-      box-shadow: var(--shadow-md);
-    }
-
-    .wechat-modal-card.is-large .wechat-modal-qr {
-      width: min(100%, 320px);
-      padding: 22px;
-    }
-
-    .wechat-modal-qr .qr-image {
-      border-radius: 18px;
-    }
-
-    .wechat-modal-note {
-      margin-top: 16px;
-      font-size: var(--text-sm);
-      color: var(--slate-500);
-      line-height: var(--leading-normal);
-    }
-
-    .hero {
-      min-height: 85vh;
-      display: flex;
-      align-items: center;
-      padding: 88px 0 56px;
-      background: linear-gradient(180deg, var(--blue-50) 0%, var(--white) 100%);
-    }
-
-    .hero-inner {
-      text-align: center;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 6px 16px;
-      border-radius: var(--radius-full);
-      background: var(--blue-50);
-      color: var(--blue-700);
-      font-size: var(--text-sm);
-      font-weight: var(--font-semibold);
-      margin-bottom: var(--space-6);
-    }
-
-    .hero-title {
-      max-width: 880px;
-      margin: 0 auto;
-      font-size: var(--text-hero);
-      line-height: var(--leading-tight);
-      letter-spacing: -0.04em;
-      font-weight: var(--font-bold);
-    }
-
-    .hero-subtitle {
-      max-width: 640px;
-      margin: var(--space-6) auto 0;
-      font-size: var(--text-h2);
-      line-height: var(--leading-normal);
-      color: var(--slate-700);
-    }
-
-    .hero-actions {
-      margin-top: var(--space-10);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: var(--space-3);
-    }
-
-    .hero-note {
-      color: var(--slate-500);
-      font-size: var(--text-sm);
-    }
-
-    .trust-bar {
-      margin-top: var(--space-16);
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: var(--space-4);
-    }
-
-    .trust-item {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      padding: 18px 20px;
-      border-radius: var(--radius-lg);
-      background: rgba(255, 255, 255, 0.8);
-      border: 1px solid rgba(203, 213, 225, 0.8);
-      box-shadow: var(--shadow-sm);
-      font-weight: var(--font-semibold);
-      color: var(--slate-700);
-    }
-
-    .section {
-      padding: 88px 0;
-    }
-
-    .section-muted {
-      background: var(--slate-50);
-    }
-
-    .section-header {
-      text-align: center;
-      max-width: 760px;
-      margin: 0 auto 48px;
-    }
-
-    .section-title {
-      font-size: var(--text-h1);
-      line-height: 1.2;
-      font-weight: var(--font-bold);
-      color: var(--slate-900);
-    }
-
-    .section-subtitle {
-      margin-top: 16px;
-      font-size: var(--text-body);
-      line-height: var(--leading-normal);
-      color: var(--slate-700);
-    }
-
-    .grid-3,
-    .grid-4 {
-      display: grid;
-      gap: var(--space-8);
-    }
-
-    .grid-3 {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .grid-4 {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-
-    .card-panel {
-      background: var(--white);
-      border: 1px solid var(--slate-300);
-      border-radius: var(--radius-lg);
-      padding: var(--space-8);
-      box-shadow: var(--shadow-sm);
-      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-    }
-
-    .card-panel:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-lg);
-      border-color: rgba(29, 78, 216, 0.24);
-    }
-
-    .icon-bubble {
-      width: 48px;
-      height: 48px;
-      border-radius: 999px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.35rem;
-      margin-bottom: var(--space-5);
-    }
-
-    .icon-blue {
-      background: var(--blue-50);
-    }
-
-    .icon-green {
-      background: var(--green-50);
-    }
-
-    .icon-orange {
-      background: var(--orange-50);
-    }
-
-    .card-title {
-      font-size: var(--text-h3);
-      font-weight: var(--font-bold);
-      color: var(--slate-900);
-    }
-
-    .card-text,
-    .card-body {
-      margin-top: 12px;
-      color: var(--slate-700);
-      line-height: var(--leading-normal);
-      font-size: var(--text-body);
-    }
-
-    .value-split {
-      margin-top: var(--space-6);
-      padding-top: var(--space-6);
-      border-top: 1px dashed var(--slate-300);
-    }
-
-    .solution-label {
-      font-weight: var(--font-semibold);
-      color: var(--green-600);
-    }
-
-    .tags {
-      margin-top: 18px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .tag {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 4px 12px;
-      border-radius: var(--radius-full);
-      font-size: var(--text-xs);
-      font-weight: var(--font-semibold);
-      background: var(--blue-50);
-      color: var(--blue-700);
-    }
-
-    .tag-green {
-      background: var(--green-50);
-      color: var(--green-600);
-    }
-
-    .tag-white {
-      background: var(--white);
-      color: var(--slate-700);
-      border: 1px solid var(--slate-300);
-    }
-
-    .section-footnote {
-      text-align: center;
-      margin-top: var(--space-10);
-      color: var(--slate-700);
-      font-size: var(--text-body);
-      line-height: var(--leading-normal);
-    }
-
-    .section-footnote strong {
-      color: var(--blue-700);
-    }
-
-    .why-list {
-      max-width: 800px;
-      margin: 0 auto;
-      display: grid;
-      gap: var(--space-8);
-    }
-
-    .why-item {
-      display: grid;
-      grid-template-columns: 48px 1fr;
-      gap: var(--space-6);
-      align-items: start;
-      padding-bottom: var(--space-8);
-      border-bottom: 1px solid var(--slate-50);
-    }
-
-    .why-item:last-child {
-      border-bottom: none;
-      padding-bottom: 0;
-    }
-
-    .audience-quote {
-      margin-top: 12px;
-      color: var(--slate-500);
-      font-style: italic;
-      line-height: var(--leading-normal);
-    }
-
-    .text-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      margin-top: 18px;
-      color: var(--blue-700);
-      font-weight: var(--font-semibold);
-      text-decoration: none;
-    }
-
-    .text-link:hover {
-      color: var(--blue-600);
-    }
-
-    .testimonial-card blockquote {
-      color: var(--slate-900);
-      line-height: var(--leading-normal);
-      font-size: 1rem;
-    }
-
-    .testimonial-card blockquote::before {
-      content: "“";
-      display: block;
-      margin-bottom: 10px;
-      color: var(--blue-700);
-      font-size: 2rem;
-      line-height: 1;
-      font-weight: var(--font-bold);
-    }
-
-    .testimonial-meta {
-      margin-top: var(--space-6);
-      padding-top: var(--space-5);
-      border-top: 1px solid var(--slate-300);
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-      color: var(--slate-700);
-      font-size: var(--text-sm);
-      font-weight: var(--font-semibold);
-    }
-
-    .journey-wrap {
-      position: relative;
-      margin-top: 8px;
-    }
-
-    .journey-line {
-      position: absolute;
-      top: 24px;
-      left: 10%;
-      right: 10%;
-      height: 2px;
-      background: var(--blue-700);
-      z-index: 0;
-    }
-
-    .journey-grid {
-      position: relative;
-      z-index: 1;
-      display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: var(--space-6);
-    }
-
-    .journey-step {
-      text-align: center;
-    }
-
-    .step-index {
-      width: 48px;
-      height: 48px;
-      border-radius: 999px;
-      background: var(--blue-700);
-      color: var(--white);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: var(--font-bold);
-      margin-bottom: var(--space-4);
-      box-shadow: var(--shadow-sm);
-    }
-
-    .journey-title {
-      font-size: var(--text-h3);
-      font-weight: var(--font-bold);
-      color: var(--slate-900);
-    }
-
-    .journey-text {
-      margin-top: 10px;
-      color: var(--slate-700);
-      line-height: var(--leading-normal);
-      font-size: var(--text-sm);
-    }
-
-    .promise-row {
-      margin-top: var(--space-10);
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .cta-section {
-      background: linear-gradient(180deg, var(--white) 0%, var(--blue-50) 100%);
-    }
-
-    .cta-panel {
-      text-align: center;
-      background: transparent;
-    }
-
-    .cta-tag-row {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin: 18px 0 32px;
-    }
-
-    .qr-card {
-      margin: 0 auto;
-      max-width: 260px;
-      padding: 18px;
-      background: var(--white);
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-md);
-      border: 1px solid var(--slate-300);
-    }
-
-    .qr-image {
-      display: block;
-      width: 100%;
-      height: auto;
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-sm);
-    }
-
-    .qr-caption {
-      margin-top: 12px;
-      font-size: var(--text-sm);
-      color: var(--slate-700);
-    }
-
-    .cta-helper {
-      max-width: 500px;
-      margin: 24px auto 0;
-      color: var(--slate-500);
-      font-size: var(--text-sm);
-      line-height: var(--leading-normal);
-    }
-
-    .site-footer {
-      background: var(--slate-900);
-      color: var(--slate-300);
-    }
-
-    .footer-grid {
-      padding: var(--space-12) 0;
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: var(--space-8);
-    }
-
-    .footer-title {
-      font-weight: var(--font-semibold);
-      color: var(--white);
-      margin-bottom: 12px;
-      font-size: var(--text-body);
-    }
-
-    .footer-copy {
-      line-height: var(--leading-normal);
-      font-size: var(--text-sm);
-    }
-
-    .footer-link {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    .footer-link:hover {
-      color: var(--white);
-    }
-
-    .footer-bottom {
-      border-top: 1px solid var(--slate-700);
-      padding: 18px 0 28px;
-      color: var(--slate-500);
-      font-size: var(--text-xs);
-      text-align: center;
-    }
-
-    .reveal {
-      opacity: 0;
-      transform: translateY(20px);
-      transition: opacity 0.6s ease, transform 0.6s ease;
-    }
-
-    .reveal.is-visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    @media (max-width: 1023px) {
-      .grid-4 {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
-      .journey-line {
-        display: none;
-      }
-
-      .journey-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    @media (max-width: 767px) {
-      .shell {
-        width: min(var(--max-width), calc(100% - 32px));
-      }
-
-      .nav-shell {
-        min-height: 56px;
-      }
-
-      .floating-wechat-button {
-        right: 16px;
-        bottom: 20px;
-        min-height: 44px;
-        padding: 0 16px;
-        font-size: var(--text-sm);
-      }
-
-      .nav-cta,
-      .primary-cta {
-        padding: 12px 20px;
-      }
-
-      .hero {
-        min-height: 70vh;
-        padding: 64px 0 40px;
-      }
-
-      .hero-inner,
-      .section-header {
-        text-align: left;
-      }
-
-      .hero-title,
-      .hero-subtitle,
-      .section-header {
-        margin-left: 0;
-        margin-right: 0;
-      }
-
-      .hero-actions {
-        align-items: flex-start;
-      }
-
-      .trust-bar,
-      .grid-3,
-      .grid-4,
-      .journey-grid,
-      .footer-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .why-item {
-        grid-template-columns: 1fr;
-      }
-
-      .cta-panel,
-      .site-footer,
-      .footer-bottom {
-        text-align: left;
-      }
-
-      .cta-tag-row,
-      .promise-row {
-        justify-content: flex-start;
-      }
-
-      .qr-card {
-        margin-left: 0;
-      }
-
-      .wechat-modal {
-        padding: 16px;
-      }
-
-      .wechat-modal-card,
-      .wechat-modal-card.is-large {
-        width: 100%;
-        padding: 24px 20px 20px;
-        border-radius: 20px;
-      }
-
-      .wechat-modal-title {
-        margin-right: 28px;
-      }
-
-      .wechat-modal-qr,
-      .wechat-modal-card.is-large .wechat-modal-qr {
-        width: min(100%, 260px);
-      }
-
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      html {
-        scroll-behavior: auto;
-      }
-
-      *,
-      *::before,
-      *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
-      }
-
-      .reveal {
-        opacity: 1;
-        transform: none;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <header class="site-nav" id="top">
     <div class="shell nav-shell">
       <a class="brand-link" href="#top" aria-label="返回页面顶部">
-        <img class="brand-mark" src="assets/heilipei-logo.jpeg" alt="河狸陪 Logo">
+        <img class="brand-mark" src="assets/heilipei-logo.jpeg" alt="河狸陪 Logo" width="160" height="52">
       </a>
+      <nav class="nav-menu" aria-label="主导航">
+        <a class="nav-item" href="/research-project-workshop/">科研项目</a>
+        <a class="nav-item" href="/jingsai-workshop/">国际竞赛</a>
+        <a class="nav-item" href="/internship-job-workshop/">实习项目</a>
+        <a class="nav-item" href="/application-planning-workshop/">升学规划</a>
+        <a class="nav-item" href="/summer-school-application-workshop/">夏校申请</a>
+        <a class="nav-item" href="/tools/">工具</a>
+      </nav>
       <a class="nav-cta" href="#cta-section" data-open-wechat-modal data-modal-size="large">免费咨询 →</a>
     </div>
   </header>
@@ -932,10 +125,10 @@
       </div>
     </section>
 
-    <section class="section section-muted reveal">
+    <section class="section section-muted reveal" id="services">
       <div class="shell">
         <div class="section-header">
-          <h2 class="section-title">一站式升学背景提升服务</h2>
+          <h2 class="section-title">一站式升学产品服务</h2>
           <p class="section-subtitle">不是“什么都卖”，而是帮你从全市场找到最适合的。</p>
         </div>
         <div class="grid-4">
@@ -1047,7 +240,7 @@
       <div class="shell">
         <div class="section-header">
           <h2 class="section-title">听听他们怎么说</h2>
-          <p class="section-subtitle">以下评价为当前首页展示版本，上线前建议替换为真实客户反馈或小红书 / 微信截图。</p>
+          <p class="section-subtitle">来自真实家庭的升学反馈，见证每一次关键选择。</p>
         </div>
         <div class="grid-3">
           <article class="card-panel testimonial-card">
@@ -1131,9 +324,14 @@
             <span class="tag tag-white">不推销</span>
           </div>
           <div class="qr-card">
-            <img class="qr-image" src="assets/wechat-qr.jpeg" alt="河狸陪教育规划师微信二维码">
+            <img class="qr-image" src="assets/wechat-qr.jpeg" alt="河狸陪教育规划师微信二维码" width="200" height="200">
             <p class="qr-caption">微信扫一扫，添加教育规划师</p>
+            <div class="copy-wechat-wrapper" style="margin-top: 12px; text-align: center;">
+            <button class="copy-wechat-btn" type="button" data-clipboard-text="dnomad003" style="padding: 6px 16px; border: 1px solid #ccc; border-radius: 4px; background: #f8f9fa; cursor: pointer; font-size: 14px; transition: all 0.2s;">
+              一键复制微信号
+            </button>
           </div>
+        </div>
           <p class="cta-helper">添加后，规划师会先了解孩子的基本情况和需求，再给出初步建议。不会强制推荐任何产品——如果当前不需要，我们会直接告诉你。</p>
         </div>
       </div>
@@ -1155,6 +353,11 @@
         <p class="footer-copy">📱 小红书：搜索“河狸陪”关注我们</p>
         <p class="footer-copy">📧 商务合作：<a class="footer-link" href="mailto:bd@dnomad.group">bd@dnomad.group</a></p>
       </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <p class="footer-title">法律条款</p>
+        <a class="footer-link" href="/user-agreement.html">用户协议</a>
+        <a class="footer-link" href="/privacy-policy.html">隐私政策</a>
+      </div>
     </div>
     <div class="shell footer-bottom">© 2026 河狸陪 Heilipei. All Rights Reserved.</div>
   </footer>
@@ -1166,8 +369,13 @@
       <h2 class="wechat-modal-title" id="wechat-modal-title">微信咨询</h2>
       <p class="wechat-modal-copy">微信扫一下，添加教育规划师</p>
       <div class="wechat-modal-qr">
-        <img class="qr-image" src="assets/wechat-qr.jpeg" alt="河狸陪教育规划师微信二维码">
-      </div>
+        <img class="qr-image" src="assets/wechat-qr.jpeg" alt="河狸陪教育规划师微信二维码" width="200" height="200">
+        <div class="copy-wechat-wrapper" style="margin-top: 12px; text-align: center;">
+            <button class="copy-wechat-btn" type="button" data-clipboard-text="dnomad003" style="padding: 6px 16px; border: 1px solid #ccc; border-radius: 4px; background: #f8f9fa; cursor: pointer; font-size: 14px; transition: all 0.2s;">
+              一键复制微信号
+            </button>
+          </div>
+        </div>
       <p class="wechat-modal-note">添加后可直接和教育规划师沟通需求，免费、1 对 1、不推销。</p>
     </div>
   </div>
@@ -1247,6 +455,43 @@
     } else {
       revealItems.forEach((item) => item.classList.add('is-visible'));
     }
+  </script>
+
+  <script>
+    function showToast(msg) {
+      var toast = document.createElement('div');
+      toast.textContent = msg;
+      toast.style.cssText = "position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #fff; padding: 10px 20px; border-radius: 4px; font-size: 14px; z-index: 10000; transition: opacity 0.3s;";
+      document.body.appendChild(toast);
+      setTimeout(function() { toast.style.opacity = '0'; setTimeout(function() { toast.remove(); }, 300); }, 3000);
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      var btns = document.querySelectorAll('.copy-wechat-btn');
+      if (btns.length === 0) return;
+      btns.forEach(function(btn) {
+        var newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        newBtn.addEventListener('click', function() {
+          var textToCopy = newBtn.getAttribute('data-clipboard-text') || 'dnomad003';
+          navigator.clipboard.writeText(textToCopy).then(function() {
+            var originalText = newBtn.innerText;
+            newBtn.innerText = '已复制';
+            newBtn.style.backgroundColor = '#e6f4ea';
+            newBtn.style.color = '#137333';
+            newBtn.style.borderColor = '#137333';
+            showToast("已复制 " + textToCopy + "，请打开微信 -> 添加朋友 -> 粘贴搜索。");
+            setTimeout(function() {
+              newBtn.innerText = originalText;
+              newBtn.style.backgroundColor = '#f8f9fa';
+              newBtn.style.color = 'inherit';
+              newBtn.style.borderColor = '#ccc';
+            }, 2000);
+          }).catch(function(err) {
+            console.error('复制失败: ', err);
+          });
+        });
+      });
+    });
   </script>
 </body>
 </html>
