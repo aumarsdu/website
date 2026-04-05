@@ -4,6 +4,7 @@ import { Layout } from './components/Layout';
 import { Home } from './pages/Home';
 import { GpaCalculator } from './pages/GpaCalculator';
 import { CostCalculator } from './pages/CostCalculator';
+import { TimelineGenerator } from './pages/TimelineGenerator';
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/gpa" element={<GpaCalculator />} />
           <Route path="/cost" element={<CostCalculator />} />
+          <Route path="/timeline" element={<TimelineGenerator />} />
         </Routes>
       </Layout>
     </BrowserRouter>

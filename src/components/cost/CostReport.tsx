@@ -100,14 +100,18 @@ export const CostReport: React.FC = () => {
           <div className="flex justify-between items-center text-sm">
             <span className="text-neutral-500 flex items-center">
               申请阶段费用
-              <Info className="w-3 h-3 ml-1 text-neutral-400" title="包含考试费、申请费、公证费等" />
+              <span title="包含考试费、申请费、公证费等">
+                <Info className="w-3 h-3 ml-1 text-neutral-400" />
+              </span>
             </span>
             <span className="font-semibold text-neutral-900">{formatRMB(application)}</span>
           </div>
           <div className="flex justify-between items-center text-sm">
             <span className="text-neutral-500 flex items-center">
               隐性费用
-              <Info className="w-3 h-3 ml-1 text-neutral-400" title="包含往返机票、签证、体检、保险等" />
+              <span title="包含往返机票、签证、体检、保险等">
+                <Info className="w-3 h-3 ml-1 text-neutral-400" />
+              </span>
             </span>
             <span className="font-semibold text-neutral-900">{formatRMB(hidden)}</span>
           </div>

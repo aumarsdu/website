@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Calculator, DollarSign, Home } from 'lucide-react';
+import { Calculator, DollarSign, Home, Calendar } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const location = useLocation();
@@ -49,7 +49,18 @@ export const Header: React.FC = () => {
                 }`}
               >
                 <DollarSign className="w-4 h-4 mr-1.5" />
-                留学费用计算器
+                费用计算器
+              </Link>
+              <Link 
+                to="/timeline"
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                  location.pathname === '/timeline' 
+                    ? 'border-brand-blue text-brand-blue' 
+                    : 'border-transparent text-neutral-500 hover:border-neutral-300 hover:text-neutral-700'
+                }`}
+              >
+                <Calendar className="w-4 h-4 mr-1.5" />
+                时间线生成器
               </Link>
             </div>
           </div>
