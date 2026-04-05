@@ -1,17 +1,60 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { useStore } from '../store';
 import { ALGORITHMS } from '../utils/gpa';
-import { Share2, GraduationCap } from 'lucide-react';
+import { Share2, GraduationCap, Loader2 } from 'lucide-react';
+import { toPng } from 'html-to-image';
 
 export const ResultCard: React.FC = () => {
   const { getResults, algorithm } = useStore();
   const { gpa, totalCredits } = getResults();
   
   const currentAlgo = ALGORITHMS[algorithm];
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleShare = async () => {
+    if (!cardRef.current) return;
+    try {
+      setIsGenerating(true);
+      
+      // 等待 DOM 更新稳定
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // 过滤掉生成卡片按钮本身
+      const filter = (node: HTMLElement) => {
+        const exclusionClasses = ['exclude-from-share'];
+        const classes = node.classList;
+        if (classes) {
+          return !exclusionClasses.some(classname => classes.contains(classname));
+        }
+        return true;
+      };
+
+      const dataUrl = await toPng(cardRef.current, { 
+        quality: 1, 
+        pixelRatio: 2,
+        filter: filter as any,
+        backgroundColor: '#ffffff'
+      });
+      
+      const link = document.createElement('a');
+      link.download = `GPA换算结果_${currentAlgo.name}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (error) {
+      console.error('生成图片失败:', error);
+      alert('生成分享卡片失败，请重试');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg border border-brand-blue-light p-6 md:p-8 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-32 h-32 bg-brand-blue-light rounded-bl-full -mr-10 -mt-10 z-0"></div>
+    <div 
+      ref={cardRef}
+      className="bg-white rounded-xl shadow-lg border border-brand-blue-light p-6 md:p-8 relative overflow-hidden"
+    >
+      <div className="absolute top-0 right-0 w-32 h-32 bg-brand-blue-light rounded-bl-full -mr-10 -mt-10 z-0 pointer-events-none"></div>
       
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-2">
@@ -45,12 +88,23 @@ export const ResultCard: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-neutral-200 flex justify-center">
+        {/* 包含品牌水印（仅在截图中显示，因为设置了底部间距，它会被截图包进去，但平时它在按钮下方且不显眼） */}
+        <div className="mt-6 text-center text-xs font-medium text-neutral-400 hidden-in-ui" style={{ display: isGenerating ? 'block' : 'none' }}>
+          由 河狸陪 GPA 换算器 生成
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-neutral-200 flex justify-center exclude-from-share">
           <button 
-            className="flex items-center px-4 py-2.5 bg-brand-green-light text-brand-green border border-green-200 hover:bg-green-100 rounded-lg text-sm font-medium transition-colors"
+            onClick={handleShare}
+            disabled={isGenerating}
+            className="flex items-center px-4 py-2.5 bg-brand-green-light text-brand-green border border-green-200 hover:bg-green-100 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Share2 className="w-4 h-4 mr-2" />
-            生成分享卡片
+            {isGenerating ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Share2 className="w-4 h-4 mr-2" />
+            )}
+            {isGenerating ? '生成中...' : '生成分享卡片'}
           </button>
         </div>
       </div>
