@@ -1,24 +1,56 @@
 import React from 'react';
-import { Calculator } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Calculator, DollarSign, Home } from 'lucide-react';
 
 export const Header: React.FC = () => {
+  const location = useLocation();
+
   return (
     <header className="bg-white border-b border-neutral-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
-            <div className="flex-shrink-0 flex items-center">
-              {/* Logo 占位 */}
-              <div className="w-8 h-8 rounded-lg bg-brand-blue flex items-center justify-center mr-3 shadow-sm">
+            <Link to="/" className="flex-shrink-0 flex items-center mr-8 group">
+              <div className="w-8 h-8 rounded-lg bg-brand-blue flex items-center justify-center mr-3 shadow-sm group-hover:bg-blue-800 transition-colors">
                 <span className="text-white font-black text-lg">H</span>
               </div>
-              <span className="text-xl font-bold text-neutral-900 tracking-tight">河狸陪</span>
-            </div>
-            <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              <span className="border-brand-blue text-brand-blue inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+              <span className="text-xl font-bold text-neutral-900 tracking-tight group-hover:text-brand-blue transition-colors">河狸陪</span>
+            </Link>
+            
+            <div className="hidden sm:flex sm:space-x-8">
+              <Link 
+                to="/"
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                  location.pathname === '/' 
+                    ? 'border-brand-blue text-brand-blue' 
+                    : 'border-transparent text-neutral-500 hover:border-neutral-300 hover:text-neutral-700'
+                }`}
+              >
+                <Home className="w-4 h-4 mr-1.5" />
+                首页
+              </Link>
+              <Link 
+                to="/gpa"
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                  location.pathname === '/gpa' 
+                    ? 'border-brand-blue text-brand-blue' 
+                    : 'border-transparent text-neutral-500 hover:border-neutral-300 hover:text-neutral-700'
+                }`}
+              >
                 <Calculator className="w-4 h-4 mr-1.5" />
                 GPA 换算器
-              </span>
+              </Link>
+              <Link 
+                to="/cost"
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                  location.pathname === '/cost' 
+                    ? 'border-brand-blue text-brand-blue' 
+                    : 'border-transparent text-neutral-500 hover:border-neutral-300 hover:text-neutral-700'
+                }`}
+              >
+                <DollarSign className="w-4 h-4 mr-1.5" />
+                留学费用计算器
+              </Link>
             </div>
           </div>
           <div className="hidden sm:ml-6 sm:flex sm:items-center">
