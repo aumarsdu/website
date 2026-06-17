@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>科研项目库</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>科研项目库</h1>
+          <p id="summaryText">正在读取项目数据</p>
+        </div>
+        <div class="topbar-actions">
+          <button id="resetButton" class="icon-button" type="button" title="重置筛选" aria-label="重置筛选">
+            <span aria-hidden="true">↺</span>
+          </button>
+        </div>
+      </header>
+
+      <section class="controls" aria-label="搜索和筛选">
+        <label class="search-box">
+          <span>搜索</span>
+          <input id="searchInput" type="search" placeholder="项目、教授、学校、学科、来源" autocomplete="off" />
+        </label>
+        <label>
+          <span>项目方</span>
+          <select id="providerFilter"></select>
+        </label>
+        <label>
+          <span>来源</span>
+          <select id="sourceFilter"></select>
+        </label>
+        <label>
+          <span>学科</span>
+          <select id="taxonomyFilter"></select>
+        </label>
+        <label>
+          <span>质量问题</span>
+          <select id="issueFilter">
+            <option value="">全部</option>
+            <option value="has">有待补全</option>
+            <option value="none">无质量问题</option>
+          </select>
+        </label>
+      </section>
+
+      <section class="workspace">
+        <section class="list-pane" aria-label="项目列表">
+          <div class="list-toolbar">
+            <strong id="resultCount">0 个项目</strong>
+            <span id="visibleRange"></span>
+          </div>
+          <div id="projectList" class="project-list"></div>
+        </section>
+
+        <aside class="detail-pane" aria-label="项目详情">
+          <div id="detailEmpty" class="detail-empty">选择一个项目查看详情</div>
+          <article id="detailContent" class="detail-content hidden"></article>
+        </aside>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

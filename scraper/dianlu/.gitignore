@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+data/raw/*
+data/processed/*
+data/assets/*
+discovery/*
+reports/*
+archives/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/assets/.gitkeep
+!discovery/.gitkeep
+!reports/.gitkeep
+!archives/.gitkeep

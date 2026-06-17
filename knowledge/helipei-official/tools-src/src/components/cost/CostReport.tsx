@@ -8,7 +8,7 @@ export const CostReport: React.FC = () => {
   const { country, getCalculatedCosts } = useCostStore();
   const { tuition, living, application, hidden, total } = getCalculatedCosts();
   const currentCountry = COST_DATA[country];
-  
+
   const cardRef = useRef<HTMLDivElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -17,19 +17,19 @@ export const CostReport: React.FC = () => {
     try {
       setIsGenerating(true);
       await new Promise(resolve => setTimeout(resolve, 100));
-      
+
       const filter = (node: HTMLElement) => {
         const exclusionClasses = ['exclude-from-share'];
         return node.classList ? !exclusionClasses.some(c => node.classList.contains(c)) : true;
       };
 
-      const dataUrl = await toPng(cardRef.current, { 
-        quality: 1, 
+      const dataUrl = await toPng(cardRef.current, {
+        quality: 1,
         pixelRatio: 2,
-        filter: filter as any,
+        filter,
         backgroundColor: '#ffffff'
       });
-      
+
       const link = document.createElement('a');
       link.download = `留学费用评估_${currentCountry.name}.png`;
       link.href = dataUrl;
@@ -50,12 +50,12 @@ export const CostReport: React.FC = () => {
   };
 
   return (
-    <div 
+    <div
       ref={cardRef}
       className="bg-white rounded-xl shadow-lg border border-brand-blue-light p-6 md:p-8 relative overflow-hidden"
     >
       <div className="absolute top-0 right-0 w-32 h-32 bg-brand-blue-light rounded-bl-full -mr-10 -mt-10 z-0 pointer-events-none"></div>
-      
+
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-neutral-900 flex items-center">
@@ -126,7 +126,7 @@ export const CostReport: React.FC = () => {
         </div>
 
         <div className="mt-8 pt-6 border-t border-neutral-200 flex flex-col sm:flex-row justify-center gap-3 exclude-from-share">
-          <button 
+          <button
             onClick={handleShare}
             disabled={isGenerating}
             className="flex-1 flex items-center justify-center px-4 py-2.5 bg-white text-brand-blue border border-brand-blue hover:bg-blue-50 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -139,7 +139,7 @@ export const CostReport: React.FC = () => {
             {isGenerating ? '生成中...' : '保存费用报告'}
           </button>
 
-          <button 
+          <button
             onClick={() => {
               if (window.gtag) {
                 window.gtag('event', 'generate_cost_saving_plan', {

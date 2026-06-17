@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Calculator, DollarSign, Home, Calendar, FileText, Target } from 'lucide-react';
+import { Calculator, DollarSign, Home, Calendar, Target, Compass } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const location = useLocation();
@@ -16,78 +16,78 @@ export const Header: React.FC = () => {
               </div>
               <span className="text-xl font-bold text-neutral-900 tracking-tight group-hover:text-brand-blue transition-colors">河狸陪</span>
             </Link>
-            
-            <div className="hidden sm:flex sm:space-x-8">
-              <Link 
+
+            <div className="hidden lg:flex lg:space-x-8">
+              <Link
                 to="/"
                 className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  location.pathname === '/' 
-                    ? 'border-brand-blue text-brand-blue' 
+                  location.pathname === '/'
+                    ? 'border-brand-blue text-brand-blue'
                     : 'border-transparent text-neutral-500 hover:border-neutral-300 hover:text-neutral-700'
                 }`}
               >
                 <Home className="w-4 h-4 mr-1.5" />
                 首页
               </Link>
-              <Link 
+              <Link
                 to="/gpa"
                 className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  location.pathname === '/gpa' 
-                    ? 'border-brand-blue text-brand-blue' 
+                  location.pathname === '/gpa'
+                    ? 'border-brand-blue text-brand-blue'
                     : 'border-transparent text-neutral-500 hover:border-neutral-300 hover:text-neutral-700'
                 }`}
               >
                 <Calculator className="w-4 h-4 mr-1.5" />
                 GPA 换算器
               </Link>
-              <Link 
+              <Link
                 to="/cost"
                 className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  location.pathname === '/cost' 
-                    ? 'border-brand-blue text-brand-blue' 
+                  location.pathname === '/cost'
+                    ? 'border-brand-blue text-brand-blue'
                     : 'border-transparent text-neutral-500 hover:border-neutral-300 hover:text-neutral-700'
                 }`}
               >
                 <DollarSign className="w-4 h-4 mr-1.5" />
                 费用计算器
               </Link>
-              <Link 
+              <Link
                 to="/timeline"
                 className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  location.pathname === '/timeline' 
-                    ? 'border-brand-blue text-brand-blue' 
+                  location.pathname === '/timeline'
+                    ? 'border-brand-blue text-brand-blue'
                     : 'border-transparent text-neutral-500 hover:border-neutral-300 hover:text-neutral-700'
                 }`}
               >
                 <Calendar className="w-4 h-4 mr-1.5" />
                 时间线生成器
               </Link>
-              <Link 
-                to="/visa-checklist"
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  location.pathname === '/visa-checklist' 
-                    ? 'border-brand-blue text-brand-blue' 
-                    : 'border-transparent text-neutral-500 hover:border-neutral-300 hover:text-neutral-700'
-                }`}
-              >
-                <FileText className="w-4 h-4 mr-1.5" />
-                签证清单
-              </Link>
-              <Link 
+              <Link
                 to="/school-matcher"
                 className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  location.pathname === '/school-matcher' 
-                    ? 'border-brand-blue text-brand-blue' 
+                  location.pathname === '/school-matcher'
+                    ? 'border-brand-blue text-brand-blue'
                     : 'border-transparent text-neutral-500 hover:border-neutral-300 hover:text-neutral-700'
                 }`}
               >
                 <Target className="w-4 h-4 mr-1.5" />
                 智能选校
               </Link>
+              <Link
+                to="/extracurricular-activity-planner"
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                  location.pathname === '/extracurricular-activity-planner'
+                    ? 'border-brand-blue text-brand-blue'
+                    : 'border-transparent text-neutral-500 hover:border-neutral-300 hover:text-neutral-700'
+                }`}
+              >
+                <Compass className="w-4 h-4 mr-1.5" />
+                活动规划器
+              </Link>
             </div>
           </div>
           <div className="hidden lg:ml-6 lg:flex lg:items-center">
-            <a 
+            <a
               href="/"
               className="bg-neutral-50 hover:bg-neutral-100 text-neutral-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-neutral-200"
             >

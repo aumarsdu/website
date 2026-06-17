@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>科研项目前端预览</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="/admin.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <div>
+          <h1>科研项目前端预览</h1>
+          <p id="summaryText">只显示后台已设置为前端显示的项目</p>
+        </div>
+        <nav>
+          <a href="/admin/">后台管理</a>
+        </nav>
+      </header>
+      <section class="controls compact" aria-label="前端搜索">
+        <label class="search">
+          <span>搜索</span>
+          <input id="public-q" type="search" placeholder="项目、教授、学校、学科" />
+        </label>
+      </section>
+      <section class="public-list">
+        <div class="list-head">
+          <strong>前端项目</strong>
+          <span id="public-meta"></span>
+        </div>
+        <div id="public-list" class="project-list public"></div>
+        <div class="pager">
+          <button id="public-prev" type="button">上一页</button>
+          <button id="public-next" type="button">下一页</button>
+        </div>
+      </section>
+    </main>
+    <script src="/public.js"></script>
+  </body>
+</html>

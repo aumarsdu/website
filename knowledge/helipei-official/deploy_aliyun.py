@@ -41,7 +41,7 @@ def deploy_to_oss():
 
     # 获取当前目录
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    
+
     # 需要上传的文件类型
     content_types = {
         '.html': 'text/html',
@@ -68,7 +68,7 @@ def deploy_to_oss():
         if '__pycache__' in root or '.git' in root or '.env' in root or 'node_modules' in root or 'tools-src' in root:
             continue
         dirs[:] = [directory for directory in dirs if directory not in {'__pycache__', '.git', 'deploy', '.trae', '.claude', 'node_modules', 'tools-src'}]
-            
+
         for file in files:
             # 排除脚本本身和配置文件
             if file.endswith('.py') or file.startswith('.env') or file.startswith('.'):
@@ -76,16 +76,16 @@ def deploy_to_oss():
             ext = os.path.splitext(file)[1].lower()
             if ext not in allowed_extensions:
                 continue
-                
+
             file_path = os.path.join(root, file)
             # 计算在OSS中的路径（相对路径）
             rel_path = os.path.relpath(file_path, current_dir)
             # 统一使用正斜杠
             oss_path = rel_path.replace('\\', '/')
-            
+
             # 获取Content-Type
             content_type = content_types.get(ext, 'application/octet-stream')
-            
+
             headers = {'Content-Type': content_type}
             # 设置缓存控制
             if file.endswith('.html'):
@@ -97,6 +97,18 @@ def deploy_to_oss():
                 print(f"正在上传: {oss_path} ({content_type})...")
                 with open(file_path, 'rb') as fileobj:
                     bucket.put_object(oss_path, fileobj, headers=headers)
+
+                # Create aliases for index.html
+                if oss_path.endswith('/index.html'):
+                    alias1 = oss_path[:-10] # e.g. tools/gpa/
+                    alias2 = oss_path[:-11] # e.g. tools/gpa
+                    if alias1:
+                        with open(file_path, 'rb') as fileobj:
+                            bucket.put_object(alias1, fileobj, headers=headers)
+                    if alias2:
+                        with open(file_path, 'rb') as fileobj:
+                            bucket.put_object(alias2, fileobj, headers=headers)
+
                 success_count += 1
             except Exception as e:
                 print(f"上传失败 {oss_path}: {e}")

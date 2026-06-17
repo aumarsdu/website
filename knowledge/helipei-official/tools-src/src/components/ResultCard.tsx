@@ -7,7 +7,7 @@ import { toPng } from 'html-to-image';
 export const ResultCard: React.FC = () => {
   const { getResults, algorithm } = useStore();
   const { gpa, totalCredits } = getResults();
-  
+
   const currentAlgo = ALGORITHMS[algorithm];
   const cardRef = useRef<HTMLDivElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -16,10 +16,10 @@ export const ResultCard: React.FC = () => {
     if (!cardRef.current) return;
     try {
       setIsGenerating(true);
-      
+
       // 等待 DOM 更新稳定
       await new Promise(resolve => setTimeout(resolve, 100));
-      
+
       // 过滤掉生成卡片按钮本身
       const filter = (node: HTMLElement) => {
         const exclusionClasses = ['exclude-from-share'];
@@ -30,13 +30,13 @@ export const ResultCard: React.FC = () => {
         return true;
       };
 
-      const dataUrl = await toPng(cardRef.current, { 
-        quality: 1, 
+      const dataUrl = await toPng(cardRef.current, {
+        quality: 1,
         pixelRatio: 2,
-        filter: filter as any,
+        filter,
         backgroundColor: '#ffffff'
       });
-      
+
       const link = document.createElement('a');
       link.download = `GPA换算结果_${currentAlgo.name}.png`;
       link.href = dataUrl;
@@ -50,12 +50,12 @@ export const ResultCard: React.FC = () => {
   };
 
   return (
-    <div 
+    <div
       ref={cardRef}
       className="bg-white rounded-xl shadow-lg border border-brand-blue-light p-6 md:p-8 relative overflow-hidden"
     >
       <div className="absolute top-0 right-0 w-32 h-32 bg-brand-blue-light rounded-bl-full -mr-10 -mt-10 z-0 pointer-events-none"></div>
-      
+
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-xl font-bold text-neutral-900 flex items-center">
@@ -74,7 +74,7 @@ export const ResultCard: React.FC = () => {
           <div className="text-6xl md:text-7xl font-black text-brand-blue drop-shadow-sm mb-4">
             {gpa.toFixed(2)}
           </div>
-          
+
           <div className="bg-neutral-50 px-4 py-2 rounded-lg border border-neutral-200 flex space-x-6">
             <div className="flex flex-col">
               <span className="text-xs text-neutral-500">总学分</span>
@@ -86,7 +86,7 @@ export const ResultCard: React.FC = () => {
               <span className="text-lg font-bold text-neutral-900">{currentAlgo.maxGPA}</span>
             </div>
           </div>
-          
+
           <div className="mt-4 text-xs text-neutral-400 bg-blue-50 px-3 py-1.5 rounded-md border border-blue-100">
             *该算法与 WES 官方认证逻辑及大多数北美院校网申系统一致
           </div>
@@ -98,7 +98,7 @@ export const ResultCard: React.FC = () => {
         </div>
 
         <div className="mt-8 pt-6 border-t border-neutral-200 flex flex-col sm:flex-row justify-center gap-3 exclude-from-share">
-          <button 
+          <button
             onClick={handleShare}
             disabled={isGenerating}
             className="flex-1 flex items-center justify-center px-4 py-2.5 bg-white text-brand-blue border border-brand-blue hover:bg-blue-50 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -110,8 +110,8 @@ export const ResultCard: React.FC = () => {
             )}
             {isGenerating ? '生成中...' : '生成分享卡片'}
           </button>
-          
-          <button 
+
+          <button
             onClick={() => {
               // 触发事件埋点：生成 PDF 报告
               if (window.gtag) {

@@ -1,13 +1,14 @@
 import React from 'react';
+import { Outlet } from 'react-router-dom';
 import { Header } from '../components/Header';
 
-export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const Layout: React.FC = () => {
   return (
     <div className="min-h-screen bg-neutral-50 font-sans text-neutral-900 selection:bg-brand-blue-light selection:text-brand-blue">
       <Header />
-      
+
       <main>
-        {children}
+        <Outlet />
       </main>
 
       <footer className="bg-white border-t border-neutral-200 py-12 mt-12">

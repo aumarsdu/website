@@ -1,0 +1,18 @@
+base_url: https://www.openision.com
+user_agent: AuthorizedOpenisionCrawler/1.0 contact=YOUR_EMAIL_HERE
+request_min_delay_seconds: 0.5
+request_max_delay_seconds: 2.0
+concurrency: 1
+headless: true
+max_probe_pages: 10
+enable_login_state: false
+storage_state_path: data/probe/storage_state.json
+output_dir: data
+allowed_domains:
+  - www.openision.com
+  - openision.com
+  - openisionapi.openision.com
+initial_paths:
+  - /
+  - /schools?quick_query=may_you_like
+  - /cases

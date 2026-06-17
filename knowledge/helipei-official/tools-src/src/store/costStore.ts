@@ -8,7 +8,7 @@ interface CostState {
   schoolType: string;
   duration: number;
   accommodation: string;
-  
+
   setField: (field: keyof CostState, value: string | number) => void;
   getCalculatedCosts: () => CostResult;
 }
@@ -31,7 +31,7 @@ export const useCostStore = create<CostState>((set, get) => ({
 
   setField: (field, value) => set((state) => {
     const updates: Partial<CostState> = { [field]: value };
-    
+
     // 如果修改了国家，重置城市和学制
     if (field === 'country') {
       const countryData = COST_DATA[value as string];
@@ -40,7 +40,7 @@ export const useCostStore = create<CostState>((set, get) => ({
         updates.duration = countryData.degrees[state.degree]?.defaultDuration || 1;
       }
     }
-    
+
     // 如果修改了学位，重置学制
     if (field === 'degree') {
       const countryData = COST_DATA[state.country];
@@ -48,14 +48,14 @@ export const useCostStore = create<CostState>((set, get) => ({
         updates.duration = countryData.degrees[value as string]?.defaultDuration || 1;
       }
     }
-    
+
     return updates;
   }),
 
   getCalculatedCosts: () => {
     const { country, city, degree, schoolType, duration, accommodation } = get();
     const data = COST_DATA[country];
-    
+
     if (!data) return {
       tuition: { budget: 0, medium: 0, comfort: 0 },
       living: { budget: 0, medium: 0, comfort: 0 },
@@ -73,7 +73,7 @@ export const useCostStore = create<CostState>((set, get) => ({
     if (schoolType === 'public') tuitionBase = degreeData.publicTuition;
     else if (schoolType === 'private') tuitionBase = degreeData.privateTuition;
     else tuitionBase = (degreeData.publicTuition + degreeData.privateTuition) / 2; // 不确定取平均
-    
+
     // 假设预算型学费略低（例如公立/非核心区），宽裕型略高（私立/名校）
     const tBaseRmb = tuitionBase * duration * rate;
     const tuition = {
@@ -85,14 +85,14 @@ export const useCostStore = create<CostState>((set, get) => ({
     // 2. 生活费计算
     const accomData = ACCOMMODATION_TYPES.find(a => a.id === accommodation) || ACCOMMODATION_TYPES[0];
     const accomMonthly = cityData.accommodationBase * accomData.multiplier;
-    
+
     // 其他生活费（餐饮、交通、日常）基数 (按月)
-    // 根据国家的经济水平大致设一个常数，或者直接给个系数。这里简单化处理：
-    const otherMonthlyBase = 600 * cityData.livingMultiplier; // 当地货币
-    
+    // 核心修复：使用各国的真实生活费基数，移除硬编码的 600
+    const otherMonthlyBase = data.livingBase * cityData.livingMultiplier; // 当地货币
+
     // 每年按12个月计算
     const livingMonthlyMedium = accomMonthly + otherMonthlyBase;
-    
+
     const livingBaseRmb = livingMonthlyMedium * 12 * duration * rate;
     const living = {
       budget: Math.round(livingBaseRmb * 0.7), // 自己做饭、少娱乐

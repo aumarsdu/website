@@ -1,0 +1,24 @@
+[
+  {
+    "id": "pioneer",
+    "name": "Pioneer Academics (先锋学术)",
+    "category": "research",
+    "difficulty": 4.5,
+    "recognition": 4.8,
+    "timeCost": "high",
+    "priceRange": "$6k-$8k",
+    "riskLevel": "low",
+    "summary": "含金量极高的严进严出科研项目，藤校背书强。但耗时巨大（长达半年），不建议在11年级下学期（冲刺标化期）强行上车。"
+  },
+  {
+    "id": "amc12",
+    "name": "AMC 12 (美国数学竞赛)",
+    "category": "competition",
+    "difficulty": 4.0,
+    "recognition": 4.5,
+    "timeCost": "medium",
+    "priceRange": "Free / Low",
+    "riskLevel": "low",
+    "summary": "理科申请的敲门砖。性价比极高，但近年来由于大规模泄题风波，单纯过线的含金量有所下降，必须冲刺 AIME 才有决定性优势。"
+  }
+]

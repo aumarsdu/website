@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Share2, MessageCircle, FileText, CheckCircle2, AlertTriangle, AlertCircle, RefreshCw } from 'lucide-react';
-import { CountryVisa, VisaType, visaData, MaterialItem } from '../data/visaData';
+import { Download, MessageCircle, FileText, CheckCircle2, AlertTriangle, AlertCircle, RefreshCw } from 'lucide-react';
+import { visaData, MaterialItem } from '../data/visaData';
 
 export const VisaChecklist: React.FC = () => {
   const [selectedCountry, setSelectedCountry] = useState<string>('');
   const [selectedVisa, setSelectedVisa] = useState<string>('');
   const [selectedIdentity, setSelectedIdentity] = useState<string>('student');
   const [showChecklist, setShowChecklist] = useState<boolean>(false);
-  
+
   // State for checklist items (stored in localStorage)
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
-  
+
   // Load saved state on mount
   useEffect(() => {
     const saved = localStorage.getItem('visa_checklist_saved');
@@ -63,7 +63,7 @@ export const VisaChecklist: React.FC = () => {
 
   const renderMaterialSection = (title: string, materials: MaterialItem[], icon: React.ReactNode) => {
     if (!materials || materials.length === 0) return null;
-    
+
     return (
       <div className="mb-8 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="bg-slate-50 px-6 py-4 border-b border-gray-100 flex items-center gap-3">
@@ -72,15 +72,15 @@ export const VisaChecklist: React.FC = () => {
         </div>
         <div className="divide-y divide-gray-50">
           {materials.map(item => (
-            <div 
-              key={item.id} 
+            <div
+              key={item.id}
               className={`p-6 transition-colors hover:bg-slate-50 flex gap-4 cursor-pointer ${checkedItems[item.id] ? 'bg-blue-50/30' : ''}`}
               onClick={() => handleToggleItem(item.id)}
             >
               <div className="flex-shrink-0 mt-1">
                 <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                  checkedItems[item.id] 
-                    ? 'border-blue-500 bg-blue-500 text-white' 
+                  checkedItems[item.id]
+                    ? 'border-blue-500 bg-blue-500 text-white'
                     : 'border-gray-300 text-transparent'
                 }`}>
                   <CheckCircle2 className="w-4 h-4" />
@@ -138,7 +138,7 @@ export const VisaChecklist: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">1. 目标国家</label>
-              <select 
+              <select
                 className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 value={selectedCountry}
                 onChange={(e) => {
@@ -153,10 +153,10 @@ export const VisaChecklist: React.FC = () => {
                 ))}
               </select>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">2. 签证类型</label>
-              <select 
+              <select
                 className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-50 disabled:bg-gray-100"
                 value={selectedVisa}
                 onChange={(e) => {
@@ -174,7 +174,7 @@ export const VisaChecklist: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">3. 申请人身份</label>
-              <select 
+              <select
                 className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 value={selectedIdentity}
                 onChange={(e) => {
@@ -190,7 +190,7 @@ export const VisaChecklist: React.FC = () => {
           </div>
 
           <div className="mt-8 text-center">
-            <button 
+            <button
               onClick={handleGenerate}
               disabled={!selectedCountry || !selectedVisa}
               className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold py-3.5 px-8 rounded-xl shadow-lg shadow-blue-600/30 transition-all transform hover:-translate-y-0.5 active:translate-y-0 w-full md:w-auto min-w-[200px]"
@@ -221,15 +221,15 @@ export const VisaChecklist: React.FC = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="w-full md:w-64 bg-white/5 rounded-xl p-4 border border-white/10">
                 <div className="flex justify-between items-end mb-2">
                   <span className="text-sm font-medium text-slate-300">准备进度</span>
                   <span className="text-2xl font-bold text-blue-400">{progressPercentage}%</span>
                 </div>
                 <div className="w-full bg-slate-700 rounded-full h-2.5 mb-2 overflow-hidden">
-                  <div 
-                    className="bg-blue-500 h-2.5 rounded-full transition-all duration-500 ease-out" 
+                  <div
+                    className="bg-blue-500 h-2.5 rounded-full transition-all duration-500 ease-out"
                     style={{ width: `${progressPercentage}%` }}
                   ></div>
                 </div>
@@ -279,7 +279,7 @@ export const VisaChecklist: React.FC = () => {
                     立即下单
                   </button>
                 </div>
-                
+
                 <div className="bg-slate-50 rounded-xl p-5 border border-slate-100 flex flex-col items-center text-center transition-transform hover:-translate-y-1">
                   <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
                     <MessageCircle className="w-6 h-6" />
@@ -290,14 +290,14 @@ export const VisaChecklist: React.FC = () => {
                     添加微信咨询
                   </button>
                 </div>
-                
+
                 <div className="bg-slate-50 rounded-xl p-5 border border-slate-100 flex flex-col items-center text-center transition-transform hover:-translate-y-1">
                   <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4">
                     <Download className="w-6 h-6" />
                   </div>
                   <h4 className="font-bold text-slate-800 mb-2">保存/分享清单</h4>
                   <p className="text-sm text-slate-600 mb-4 flex-grow">生成 PDF 格式清单，方便打印随身携带，或分享给父母一起准备。</p>
-                  <button 
+                  <button
                     className="w-full py-2.5 bg-white border-2 border-blue-600 text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors"
                     onClick={() => alert("PDF 下载功能开发中...")}
                   >

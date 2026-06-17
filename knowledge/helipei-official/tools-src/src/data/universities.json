@@ -1,0 +1,28 @@
+[
+  {
+    "id": "harvard",
+    "nameEn": "Harvard University",
+    "nameZh": "哈佛大学",
+    "tier": "Tier 1",
+    "tags": ["藤校", "综合大U"],
+    "location": "Cambridge, MA",
+    "admissionProfile": {
+      "gpa": { "min": 3.9, "max": 4.0 },
+      "sat": { "min": 1480, "max": 1580 },
+      "toefl": 105
+    }
+  },
+  {
+    "id": "nyu",
+    "nameEn": "New York University",
+    "nameZh": "纽约大学",
+    "tier": "Tier 2",
+    "tags": ["综合大U", "都市校园"],
+    "location": "New York, NY",
+    "admissionProfile": {
+      "gpa": { "min": 3.7, "max": 3.9 },
+      "sat": { "min": 1450, "max": 1540 },
+      "toefl": 100
+    }
+  }
+]

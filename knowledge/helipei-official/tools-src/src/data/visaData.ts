@@ -5,6 +5,7 @@ export interface MaterialItem {
   prep_time: string;
   notes: string;
   needs_translation: boolean;
+  for_identity?: string[];
 }
 
 export interface VisaType {
@@ -129,12 +130,22 @@ export const visaData: CountryVisa[] = [
           ],
           academic: [
             {
+              id: "us-f1-scholar-1",
+              name: "导师/合作机构邀请函",
+              required: true,
+              prep_time: "已获得",
+              notes: "正式邀请函，说明访问目的和期限",
+              needs_translation: false,
+              for_identity: ["scholar"]
+            },
+            {
               id: "us-f1-acad-1",
               name: "学校录取通知书 (Offer/Admission Letter)",
               required: true,
               prep_time: "已获得",
               notes: "原件或高清晰打印件",
-              needs_translation: false
+              needs_translation: false,
+              for_identity: ["student", "minor"]
             },
             {
               id: "us-f1-acad-2",
@@ -166,7 +177,8 @@ export const visaData: CountryVisa[] = [
               required: false,
               prep_time: "3-5 天",
               notes: "特别是敏感专业/硕博申请者，强烈建议准备",
-              needs_translation: true
+              needs_translation: true,
+              for_identity: ["student", "scholar"]
             },
             {
               id: "us-f1-acad-6",
@@ -178,6 +190,24 @@ export const visaData: CountryVisa[] = [
             }
           ],
           supporting: [
+            {
+              id: "us-f1-minor-1",
+              name: "未成年人父母同意书",
+              required: true,
+              prep_time: "1-2 周",
+              notes: "需父母双方签字同意出行，并做公证",
+              needs_translation: true,
+              for_identity: ["minor"]
+            },
+            {
+              id: "us-f1-minor-2",
+              name: "出生证明",
+              required: true,
+              prep_time: "1-2 周",
+              notes: "证明亲属关系",
+              needs_translation: true,
+              for_identity: ["minor"]
+            },
             {
               id: "us-f1-sup-1",
               name: "户口本原件",

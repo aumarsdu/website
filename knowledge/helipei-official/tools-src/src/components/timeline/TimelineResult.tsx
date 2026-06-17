@@ -33,7 +33,7 @@ export const TimelineResult: React.FC = () => {
       const dataUrl = await toPng(resultRef.current, {
         quality: 1,
         pixelRatio: 2,
-        filter: filter as any,
+        filter,
         backgroundColor: '#f8fafc' // slate-50 to match bg
       });
 
@@ -50,26 +50,26 @@ export const TimelineResult: React.FC = () => {
 
   // 找到第一个被锁定的阶段索引
   const firstLockedIndex = timelineData.findIndex(stage => stage.isLocked);
-  
+
   return (
-    <div 
+    <div
       ref={resultRef}
       className="bg-slate-50 sm:bg-white sm:rounded-3xl sm:shadow-sm sm:border border-slate-200 overflow-hidden relative mt-8 transition-all duration-500 animate-in slide-in-from-bottom-8 fade-in"
     >
       {/* Header Banner */}
       <div className="bg-gradient-to-br from-primary-900 via-primary-800 to-slate-900 px-6 sm:px-10 py-10 sm:py-12 relative overflow-hidden text-white">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white via-transparent to-transparent" />
-        
+
         <div className="relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-sm font-medium mb-6">
             <Sparkles className="w-4 h-4 text-primary-300" />
             <span>为您量身定制</span>
           </div>
-          
+
           <h2 className="text-3xl sm:text-4xl font-extrabold mb-4 leading-tight">
             {formData.country} {formData.level} 申请时间线
           </h2>
-          
+
           <div className="flex flex-wrap gap-4 text-sm sm:text-base text-slate-200">
             <div className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-lg backdrop-blur-sm border border-white/10">
               <GraduationCap className="w-4 h-4 text-primary-300" />
@@ -112,12 +112,12 @@ export const TimelineResult: React.FC = () => {
         <div className="space-y-0 relative">
           {timelineData.map((stage, index) => (
             <React.Fragment key={stage.id}>
-              <TimelineStageCard 
-                stage={stage} 
-                index={index} 
-                total={timelineData.length} 
+              <TimelineStageCard
+                stage={stage}
+                index={index}
+                total={timelineData.length}
               />
-              
+
               {/* Insert CTA Lock immediately after the last unlocked item if there are locked items */}
               {firstLockedIndex !== -1 && index === firstLockedIndex - 1 && (
                 <TimelineCta type="mid-lock" />

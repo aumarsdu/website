@@ -4,7 +4,7 @@ import { matchSchools, MatchedSchool } from '../data/schoolData';
 
 export const SchoolMatcher: React.FC = () => {
   const [step, setStep] = useState<number>(1);
-  
+
   // Form State
   const [degree, setDegree] = useState<string>('master');
   const [major, setMajor] = useState<string>('cs');
@@ -13,18 +13,18 @@ export const SchoolMatcher: React.FC = () => {
   const [schoolBg, setSchoolBg] = useState<string>('985');
   const [countries, setCountries] = useState<string[]>([]);
   const [highlights, setHighlights] = useState<string[]>([]);
-  
+
   // Results State
   const [results, setResults] = useState<{ reach: MatchedSchool[], match: MatchedSchool[], safety: MatchedSchool[] } | null>(null);
 
   const handleCountryToggle = (code: string) => {
-    setCountries(prev => 
+    setCountries(prev =>
       prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]
     );
   };
 
   const handleHighlightToggle = (tag: string) => {
-    setHighlights(prev => 
+    setHighlights(prev =>
       prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
     );
   };
@@ -45,9 +45,9 @@ export const SchoolMatcher: React.FC = () => {
 
   const handleMatch = () => {
     if (!validateGpa()) return;
-    
+
     const gpa = parseFloat(gpaStr);
-    const matched = matchSchools(gpa, countries, schoolBg, highlights);
+    const matched = matchSchools(degree, major, gpa, countries, schoolBg, highlights);
     setResults(matched);
     setStep(3);
   };
@@ -63,7 +63,7 @@ export const SchoolMatcher: React.FC = () => {
             <span className="text-sm font-medium text-slate-500">解锁查看</span>
           </div>
         )}
-        
+
         <div className="flex justify-between items-start mb-3">
           <div>
             <h4 className="font-bold text-lg text-slate-800">{school.name}</h4>
@@ -75,7 +75,7 @@ export const SchoolMatcher: React.FC = () => {
             </span>
           </div>
         </div>
-        
+
         <div className="flex flex-wrap gap-2 mb-4">
           {school.tags.map(tag => (
             <span key={tag} className="text-xs px-2 py-0.5 bg-blue-50 text-blue-600 rounded border border-blue-100">
@@ -83,7 +83,7 @@ export const SchoolMatcher: React.FC = () => {
             </span>
           ))}
         </div>
-        
+
         <div className="pt-3 border-t border-slate-100 flex justify-between items-center text-sm">
           <span className="text-slate-500">建议 GPA</span>
           <span className="font-medium text-slate-700">{school.req_gpa.toFixed(1)}+</span>
@@ -111,7 +111,7 @@ export const SchoolMatcher: React.FC = () => {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20">
-        
+
         {step < 3 && (
           <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 md:p-8 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex items-center justify-between mb-8 border-b border-slate-100 pb-4">
@@ -140,8 +140,8 @@ export const SchoolMatcher: React.FC = () => {
                             else if (deg === 'phd') setSchoolBg('c9_985');
                           }}
                           className={`flex-1 py-3 px-4 rounded-xl border font-medium text-sm transition-all ${
-                            degree === deg 
-                              ? 'bg-blue-50 border-blue-500 text-blue-700 shadow-sm' 
+                            degree === deg
+                              ? 'bg-blue-50 border-blue-500 text-blue-700 shadow-sm'
                               : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                           }`}
                         >
@@ -150,13 +150,13 @@ export const SchoolMatcher: React.FC = () => {
                       ))}
                     </div>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">当前 GPA (4.0制)</label>
-                    <input 
-                      type="number" 
-                      step="0.1" 
-                      min="0" 
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
                       max="4.0"
                       placeholder="例如: 3.5"
                       value={gpaStr}
@@ -174,10 +174,10 @@ export const SchoolMatcher: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                      {degree === 'bachelor' ? '高中学校背景' : 
+                      {degree === 'bachelor' ? '高中学校背景' :
                        degree === 'master' ? '本科院校背景' : '最高学历院校背景'}
                     </label>
-                    <select 
+                    <select
                       value={schoolBg}
                       onChange={(e) => setSchoolBg(e.target.value)}
                       className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
@@ -216,10 +216,10 @@ export const SchoolMatcher: React.FC = () => {
                       )}
                     </select>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">意向专业大类</label>
-                    <select 
+                    <select
                       value={major}
                       onChange={(e) => setMajor(e.target.value)}
                       className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
@@ -237,7 +237,7 @@ export const SchoolMatcher: React.FC = () => {
                 </div>
 
                 <div className="mt-8 flex justify-end">
-                  <button 
+                  <button
                     onClick={() => {
                       if (validateGpa()) {
                         setStep(2);
@@ -268,8 +268,8 @@ export const SchoolMatcher: React.FC = () => {
                         key={country.code}
                         onClick={() => handleCountryToggle(country.code)}
                         className={`py-3 px-4 rounded-xl border flex items-center justify-center gap-2 transition-all ${
-                          countries.includes(country.code) 
-                            ? 'bg-blue-50 border-blue-500 text-blue-700 shadow-sm' 
+                          countries.includes(country.code)
+                            ? 'bg-blue-50 border-blue-500 text-blue-700 shadow-sm'
                             : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                         }`}
                       >
@@ -290,9 +290,9 @@ export const SchoolMatcher: React.FC = () => {
                       <div className="flex flex-wrap gap-2">
                         {['高分标化 (GRE/GMAT)', '顶级科研/一作论文', '大厂核心实习', '国际竞赛大奖', '海外交换经历'].map(tag => (
                           <label key={tag} className={`flex items-center gap-2 bg-white border px-3 py-1.5 rounded-lg cursor-pointer transition-colors ${highlights.includes(tag) ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:bg-slate-50'}`}>
-                            <input 
-                              type="checkbox" 
-                              className="rounded text-blue-600 focus:ring-blue-500" 
+                            <input
+                              type="checkbox"
+                              className="rounded text-blue-600 focus:ring-blue-500"
                               checked={highlights.includes(tag)}
                               onChange={() => handleHighlightToggle(tag)}
                             />
@@ -305,13 +305,13 @@ export const SchoolMatcher: React.FC = () => {
                 </div>
 
                 <div className="mt-8 flex justify-between">
-                  <button 
+                  <button
                     onClick={() => setStep(1)}
                     className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 font-medium py-3.5 px-6 rounded-xl transition-all"
                   >
                     返回修改
                   </button>
-                  <button 
+                  <button
                     onClick={handleMatch}
                     className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 px-8 rounded-xl shadow-lg shadow-blue-600/30 transition-all flex items-center gap-2"
                   >
@@ -333,33 +333,33 @@ export const SchoolMatcher: React.FC = () => {
                 <div className="flex flex-wrap gap-2 text-sm text-slate-500">
                   <span className="px-2 py-1 bg-slate-100 rounded-md">GPA: {gpaStr}</span>
                   <span className="px-2 py-1 bg-slate-100 rounded-md">
-                    {schoolBg === 'top_international' ? '顶尖国际学校' : 
-                     schoolBg === 'normal_international' ? '普通国际学校' : 
-                     schoolBg === 'top_public' ? '顶尖重点高中' : 
-                     schoolBg === 'key_public' ? '省级/市级重点' : 
-                     schoolBg === 'normal_public' ? '普通高中' : 
-                     schoolBg === 'overseas_hs' ? '海外高中' : 
-                     schoolBg === 'c9' ? 'C9联盟' : 
-                     schoolBg === '985' ? '985高校' : 
-                     schoolBg === '211' ? '211高校' : 
-                     schoolBg === 'double_first' ? '双一流' : 
-                     schoolBg === 'overseas' ? '海外本' : 
-                     schoolBg === 'coop' ? '中外合作' : 
-                     schoolBg === 'normal' ? '双非一本' : 
-                     schoolBg === 'top_overseas' ? '海外顶尖名校' : 
-                     schoolBg === 'normal_overseas' ? '海外普通院校' : 
-                     schoolBg === 'c9_985' ? 'C9/985高校' : 
-                     schoolBg === '211_double_first' ? '211/双一流' : 
-                     schoolBg === 'normal_cn' ? '国内双非' : 
+                    {schoolBg === 'top_international' ? '顶尖国际学校' :
+                     schoolBg === 'normal_international' ? '普通国际学校' :
+                     schoolBg === 'top_public' ? '顶尖重点高中' :
+                     schoolBg === 'key_public' ? '省级/市级重点' :
+                     schoolBg === 'normal_public' ? '普通高中' :
+                     schoolBg === 'overseas_hs' ? '海外高中' :
+                     schoolBg === 'c9' ? 'C9联盟' :
+                     schoolBg === '985' ? '985高校' :
+                     schoolBg === '211' ? '211高校' :
+                     schoolBg === 'double_first' ? '双一流' :
+                     schoolBg === 'overseas' ? '海外本' :
+                     schoolBg === 'coop' ? '中外合作' :
+                     schoolBg === 'normal' ? '双非一本' :
+                     schoolBg === 'top_overseas' ? '海外顶尖名校' :
+                     schoolBg === 'normal_overseas' ? '海外普通院校' :
+                     schoolBg === 'c9_985' ? 'C9/985高校' :
+                     schoolBg === '211_double_first' ? '211/双一流' :
+                     schoolBg === 'normal_cn' ? '国内双非' :
                      schoolBg === 'research_inst' ? '顶尖科研院所' : '其他'}
                   </span>
                   <span className="px-2 py-1 bg-slate-100 rounded-md">
-                    {major === 'cs' ? 'CS/数据' : 
-                     major === 'business' ? '商科' : 
-                     major === 'engineering' ? '工科' : 
-                     major === 'science' ? '理科' : 
-                     major === 'arts' ? '人文社科' : 
-                     major === 'design' ? '艺术设计' : 
+                    {major === 'cs' ? 'CS/数据' :
+                     major === 'business' ? '商科' :
+                     major === 'engineering' ? '工科' :
+                     major === 'science' ? '理科' :
+                     major === 'arts' ? '人文社科' :
+                     major === 'design' ? '艺术设计' :
                      major === 'law' ? '法学' : '医学'}
                   </span>
                   {highlights.length > 0 && (
@@ -370,13 +370,13 @@ export const SchoolMatcher: React.FC = () => {
                 </div>
               </div>
               <div className="flex gap-3 w-full md:w-auto">
-                <button 
+                <button
                   onClick={() => setStep(1)}
                   className="flex-1 md:flex-none px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50"
                 >
                   重新测算
                 </button>
-                <button 
+                <button
                   className="flex-1 md:flex-none px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center justify-center gap-2 shadow-sm"
                   onClick={() => alert("PDF 下载功能开发中...")}
                 >
@@ -395,7 +395,7 @@ export const SchoolMatcher: React.FC = () => {
                   </div>
                   <p className="text-xs text-red-600">录取率较低，需要极强软背景支持</p>
                 </div>
-                
+
                 {results.reach.slice(0, 1).map((school, i) => renderSchoolCard(school, i, false))}
                 {results.reach.length > 1 && results.reach.slice(1, 3).map((school, i) => renderSchoolCard(school, i + 1, true))}
                 {results.reach.length === 0 && (
@@ -450,7 +450,7 @@ export const SchoolMatcher: React.FC = () => {
             {/* CTA Section */}
             <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-xl overflow-hidden relative">
               <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2"></div>
-              
+
               <div className="p-8 md:p-10 flex flex-col md:flex-row items-center justify-between relative z-10 gap-8">
                 <div className="text-white max-w-xl text-center md:text-left">
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-blue-300 text-xs font-medium mb-4">
@@ -467,7 +467,7 @@ export const SchoolMatcher: React.FC = () => {
                     <li className="flex items-center gap-2"><CheckCircleIcon /> 申请时间线排期建议</li>
                   </ul>
                 </div>
-                
+
                 <div className="w-full md:w-auto flex-shrink-0 bg-white p-6 rounded-xl shadow-lg text-center min-w-[280px]">
                   <div className="w-40 h-40 bg-slate-100 mx-auto mb-4 rounded-lg flex items-center justify-center border border-slate-200 overflow-hidden">
                     <div className="text-center">

@@ -1,0 +1,21 @@
+{
+  "description": "Optional manual API mapping. Copy to config/api_overrides.json and fill after reviewing output/discovery/api_inventory.md.",
+  "list_apis": [
+    {
+      "name": "example-list",
+      "url": "https://example.com/api/list",
+      "method": "GET",
+      "page_param": "page",
+      "page_size_param": "pageSize",
+      "page_size": 20
+    }
+  ],
+  "detail_apis": [
+    {
+      "name": "example-detail",
+      "url": "https://example.com/api/detail",
+      "method": "GET",
+      "id_param": "id"
+    }
+  ]
+}

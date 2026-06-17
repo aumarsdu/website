@@ -1,0 +1,44 @@
+# OS
+.DS_Store
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Node
+node_modules/
+dist/
+build/
+.cache/
+
+# Local tool state
+.agents/
+.trae/
+
+# Crawler outputs
+output/
+output_*/
+*/output/
+*/output_*/
+
+# Local scraper workspaces
+scraper/集思未来/
+
+# Frontend build outputs
+knowledge/helipei-official/tools/
+
+# Temporary work areas
+temp_*/
+
+# Logs
+*.log
+logs/

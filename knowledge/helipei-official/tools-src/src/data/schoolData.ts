@@ -5,7 +5,7 @@ export interface School {
   country: 'US' | 'UK' | 'HK';
   ranking: number;
   logo?: string;
-  req_gpa: number; 
+  req_gpa: number;
   req_toefl?: number;
   req_ielts?: number;
   tags: string[];
@@ -50,7 +50,9 @@ export interface MatchedSchool extends School {
 }
 
 export const matchSchools = (
-  userGpa: number, 
+  degree: string,
+  major: string,
+  userGpa: number,
   targetCountries: string[],
   schoolBg: string,
   highlights: string[]
@@ -109,9 +111,22 @@ export const matchSchools = (
     case 'normal_cn':
       adjustedGpa -= 0.15;
       break;
-      
+
     default:
       break;
+  }
+
+  // Apply degree and major adjustments
+  if (degree === 'phd') {
+    adjustedGpa -= 0.1; // PhD is generally more competitive
+  } else if (degree === 'bachelor') {
+    adjustedGpa += 0.05; // Bachelor slightly less competitive
+  }
+
+  if (major === 'cs' || major === 'business' || major === 'med') {
+    adjustedGpa -= 0.1; // Highly competitive majors
+  } else if (major === 'arts' || major === 'design') {
+    adjustedGpa += 0.1; // Slightly less competitive on GPA
   }
 
   // 2. Expand reach tolerance based on highlights (max 3 highlights counted = +0.15 tolerance)
