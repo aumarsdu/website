@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 import asyncio
@@ -38,19 +39,28 @@ class AssetRef:
     attachment_id: str
 
 
-async def crawl_pbl(settings: Settings) -> None:
-    settings.ensure_dirs()
-    if settings.dry_run:
-        _print_dry_run(settings)
-        return
+from .pbl_normalize import (  # noqa: F401 - re-exported for compatibility
+    _decorate_record,
+    _dedupe_pbl_records,
+    _known_business_ids,
+    _new_projects,
+    _normalize_projects,
+    _pbl_record_score,
+    _records_from_response,
+    _split_keywords,
+)
 
-    raw_response = await _fetch_list(settings)
-    source_records = _records_from_response(raw_response)
-    records, duplicate_records = _dedupe_pbl_records(source_records)
-    major_map = await _fetch_metadata(settings)
 
-    write_jsonl(settings.raw_dir / "list_items.jsonl", [_decorate_record(item) for item in records])
-    projects = _normalize_projects(records, major_map)
+async def _finalize_projects(
+    settings: Settings,
+    *,
+    list_items: list[dict[str, Any]],
+    projects: list[dict[str, Any]],
+    source_records: list[dict[str, Any]],
+    duplicate_records: int,
+) -> list[dict[str, Any]]:
+    """Shared post-list pipeline: details, directories, exports, assets, reports."""
+    write_jsonl(settings.raw_dir / "list_items.jsonl", list_items)
     await _fetch_details(settings, projects)
     projects = _merge_project_details(settings, projects)
     projects = _with_project_directories(settings, projects)
@@ -62,9 +72,30 @@ async def crawl_pbl(settings: Settings) -> None:
     refs = _asset_refs(projects)
     await _fetch_attachment_metadata(settings, refs)
     manifest = await _download_pbl_assets(settings, projects)
-
     _write_quality(settings, source_records, projects, refs, manifest, duplicate_list_records=duplicate_records)
     _write_summary(settings, projects, manifest)
+    return manifest
+
+
+async def crawl_pbl(settings: Settings) -> None:
+    settings.ensure_dirs()
+    if settings.dry_run:
+        _print_dry_run(settings)
+        return
+
+    raw_response = await _fetch_list(settings)
+    source_records = _records_from_response(raw_response)
+    records, duplicate_records = _dedupe_pbl_records(source_records)
+    major_map = await _fetch_metadata(settings)
+    projects = _normalize_projects(records, major_map)
+
+    manifest = await _finalize_projects(
+        settings,
+        list_items=[_decorate_record(item) for item in records],
+        projects=projects,
+        source_records=source_records,
+        duplicate_records=duplicate_records,
+    )
     LOGGER.info(
         "PBL 主站抓取完成: source_records=%s unique_projects=%s duplicate_list_records=%s assets=%s",
         len(source_records),
@@ -101,20 +132,13 @@ async def crawl_pbl_incremental(settings: Settings, known_project_paths: list[Pa
     all_projects = _normalize_projects(records, major_map)
     projects = _new_projects(all_projects, known_business_ids)
 
-    write_jsonl(settings.raw_dir / "list_items.jsonl", [_decorate_record(item.get("raw") or {}) for item in projects])
-    await _fetch_details(settings, projects)
-    projects = _merge_project_details(settings, projects)
-    projects = _with_project_directories(settings, projects)
-    _write_project_detail_files(settings, projects)
-    write_jsonl(settings.processed_dir / "projects.jsonl", projects)
-    write_csv(settings.processed_dir / "projects.csv", projects)
-    write_sqlite(settings.processed_dir / "projects.sqlite", projects)
-
-    refs = _asset_refs(projects)
-    await _fetch_attachment_metadata(settings, refs)
-    manifest = await _download_pbl_assets(settings, projects)
-    _write_quality(settings, source_records, projects, refs, manifest, duplicate_list_records=duplicate_records)
-    _write_summary(settings, projects, manifest)
+    manifest = await _finalize_projects(
+        settings,
+        list_items=[_decorate_record(item.get("raw") or {}) for item in projects],
+        projects=projects,
+        source_records=source_records,
+        duplicate_records=duplicate_records,
+    )
     write_json(
         settings.reports_dir / "incremental_summary.json",
         {
@@ -379,6 +403,87 @@ async def _fetch_attachment_metadata(settings: Settings, refs: list[AssetRef]) -
     write_json(settings.reports_dir / "pbl_attachment_metadata_stats.json", stats.as_dict())
 
 
+def _manifest_item(
+    manifest_key: str,
+    project: dict[str, Any],
+    asset: dict[str, Any],
+    url: str,
+    target: Path,
+    headers: dict[str, str],
+    attachment_id: str | None = None,
+) -> dict[str, Any]:
+    return {
+        "manifest_key": manifest_key,
+        "record_title": project.get("title"),
+        "category": project.get("category"),
+        "direction": project.get("direction") or project.get("major_name"),
+        "project_dir": project.get("project_dir") or str(target.parent),
+        "field": asset.get("field"),
+        "attachment_id": attachment_id,
+        "source_url": url,
+        "file": str(target),
+        "bytes": target.stat().st_size,
+        "content_type": headers.get("content-type"),
+    }
+
+
+async def _download_asset_once(
+    fetcher: HttpFetcher,
+    *,
+    stats: CrawlStats,
+    manifest_path: Path,
+    manifest: list[dict[str, Any]],
+    done_keys: set[str],
+    manifest_key: str,
+    existing_item: dict[str, Any] | None,
+    project_folder: Path,
+    target: Path,
+    cache_path: Path,
+    url: str,
+    build_item: Callable[[dict[str, str]], dict[str, Any]],
+    label: str,
+) -> bool:
+    """Download or cache-restore one asset and append its manifest row.
+
+    Returns True when no network request was needed (already current on disk or
+    restored from the manifest). CrawlStopped propagates; other failures are
+    recorded in stats and swallowed so one bad asset cannot abort the batch.
+    """
+    if manifest_key in done_keys and _manifest_file_is_current(existing_item, project_folder):
+        return True
+    if manifest_key in done_keys and _restore_manifest_file(existing_item, target):
+        stats.pages_succeeded += 1
+        item = build_item({})
+        append_jsonl(manifest_path, item)
+        manifest.append(item)
+        return True
+    try:
+        stats.pages_requested += 1
+        if not cache_path.exists():
+            content, headers = await fetcher.request_bytes("GET", url, allow_assets=True)
+            cache_path.write_bytes(content)
+        else:
+            headers = {}
+        target.parent.mkdir(parents=True, exist_ok=True)
+        _link_or_copy(cache_path, target)
+        stats.pages_succeeded += 1
+        item = build_item(headers)
+        append_jsonl(manifest_path, item)
+        manifest.append(item)
+        done_keys.add(manifest_key)
+        if stats.pages_succeeded % 100 == 0:
+            LOGGER.info("%s 进度: %s", label, stats.pages_succeeded)
+    except CrawlStopped:
+        stats.pages_failed += 1
+        stats.add_error("http_401_or_403_access_control")
+        raise
+    except Exception as exc:  # noqa: BLE001
+        LOGGER.warning("%s 失败: %s %s", label, url, exc)
+        stats.pages_failed += 1
+        stats.add_error(_classify_error(exc))
+    return False
+
+
 async def _download_pbl_assets(settings: Settings, projects: list[dict[str, Any]]) -> list[dict[str, Any]]:
     stats = CrawlStats(started_at=utc_now(), target_domain="pbl_assets")
     metadata = _load_attachment_metadata(settings.raw_dir / "pbl_attachment_metadata.jsonl")
@@ -392,6 +497,7 @@ async def _download_pbl_assets(settings: Settings, projects: list[dict[str, Any]
 
     async with HttpFetcher(settings) as fetcher:
         for project in projects:
+            project_folder = _project_folder(settings, project)
             for asset in project.get("assets", []):
                 asset_id = str(asset.get("attachment_id") or "")
                 meta = metadata.get(asset_id)
@@ -401,145 +507,48 @@ async def _download_pbl_assets(settings: Settings, projects: list[dict[str, Any]
                 if not url:
                     continue
                 manifest_key = f"{project['business_id']}::{asset_id}::{asset.get('field')}"
-                existing_item = existing_by_key.get(manifest_key)
-                if manifest_key in done_keys and _manifest_file_is_current(existing_item, _project_folder(settings, project)):
-                    continue
-                target = _asset_target_path(settings, project, asset, meta, url)
-                if manifest_key in done_keys:
-                    if _restore_manifest_file(existing_item, target):
-                        stats.pages_succeeded += 1
-                        item = _asset_manifest_item(manifest_key, project, asset, asset_id, url, target, {})
-                        append_jsonl(manifest_path, item)
-                        manifest.append(item)
-                        continue
-                try:
-                    stats.pages_requested += 1
-                    cache_path = cache_dir / f"{asset_id}{file_extension_from_url(url, '.' + (meta.get('ext') or 'bin'))}"
-                    if not cache_path.exists():
-                        content, headers = await fetcher.request_bytes("GET", url, allow_assets=True)
-                        cache_path.write_bytes(content)
-                    else:
-                        headers = {}
-                    target.parent.mkdir(parents=True, exist_ok=True)
-                    _link_or_copy(cache_path, target)
-                    stats.pages_succeeded += 1
-                    item = _asset_manifest_item(manifest_key, project, asset, asset_id, url, target, headers)
-                    append_jsonl(manifest_path, item)
-                    manifest.append(item)
-                    done_keys.add(manifest_key)
-                    if stats.pages_succeeded % 100 == 0:
-                        LOGGER.info("PBL 附件下载进度: %s", stats.pages_succeeded)
-                except CrawlStopped:
-                    stats.pages_failed += 1
-                    stats.add_error("http_401_or_403_access_control")
-                    raise
-                except Exception as exc:  # noqa: BLE001
-                    LOGGER.warning("PBL 附件下载失败: %s %s", url, exc)
-                    stats.pages_failed += 1
-                    stats.add_error(_classify_error(exc))
+                await _download_asset_once(
+                    fetcher,
+                    stats=stats,
+                    manifest_path=manifest_path,
+                    manifest=manifest,
+                    done_keys=done_keys,
+                    manifest_key=manifest_key,
+                    existing_item=existing_by_key.get(manifest_key),
+                    project_folder=project_folder,
+                    target=_asset_target_path(settings, project, asset, meta, url),
+                    cache_path=cache_dir / f"{asset_id}{file_extension_from_url(url, '.' + (meta.get('ext') or 'bin'))}",
+                    url=url,
+                    build_item=lambda headers, _p=project, _a=asset, _u=url, _t=_asset_target_path(settings, project, asset, meta, url), _k=manifest_key, _i=asset_id: _manifest_item(
+                        _k, _p, _a, _u, _t, headers, attachment_id=_i
+                    ),
+                    label="PBL 附件下载",
+                )
             for asset in project.get("direct_assets", []):
                 url = asset.get("url")
                 if not url:
                     continue
                 manifest_key = f"{project['business_id']}::direct::{stable_hash(url)}::{asset.get('field')}"
-                existing_item = existing_by_key.get(manifest_key)
-                if manifest_key in done_keys and _manifest_file_is_current(existing_item, _project_folder(settings, project)):
-                    continue
-                target = _direct_asset_target_path(settings, project, asset, url)
-                if manifest_key in done_keys:
-                    if _restore_manifest_file(existing_item, target):
-                        stats.pages_succeeded += 1
-                        item = _direct_asset_manifest_item(manifest_key, project, asset, url, target, {})
-                        append_jsonl(manifest_path, item)
-                        manifest.append(item)
-                        continue
-                try:
-                    stats.pages_requested += 1
-                    cache_path = cache_dir / f"{stable_hash(url)}{file_extension_from_url(url)}"
-                    if not cache_path.exists():
-                        content, headers = await fetcher.request_bytes("GET", url, allow_assets=True)
-                        cache_path.write_bytes(content)
-                    else:
-                        headers = {}
-                    target.parent.mkdir(parents=True, exist_ok=True)
-                    _link_or_copy(cache_path, target)
-                    stats.pages_succeeded += 1
-                    item = _direct_asset_manifest_item(manifest_key, project, asset, url, target, headers)
-                    append_jsonl(manifest_path, item)
-                    manifest.append(item)
-                    done_keys.add(manifest_key)
-                    if stats.pages_succeeded % 100 == 0:
-                        LOGGER.info("PBL 附件下载进度: %s", stats.pages_succeeded)
-                except CrawlStopped:
-                    stats.pages_failed += 1
-                    stats.add_error("http_401_or_403_access_control")
-                    raise
-                except Exception as exc:  # noqa: BLE001
-                    LOGGER.warning("PBL 直接附件下载失败: %s %s", url, exc)
-                    stats.pages_failed += 1
-                    stats.add_error(_classify_error(exc))
+                await _download_asset_once(
+                    fetcher,
+                    stats=stats,
+                    manifest_path=manifest_path,
+                    manifest=manifest,
+                    done_keys=done_keys,
+                    manifest_key=manifest_key,
+                    existing_item=existing_by_key.get(manifest_key),
+                    project_folder=project_folder,
+                    target=_direct_asset_target_path(settings, project, asset, url),
+                    cache_path=cache_dir / f"{stable_hash(url)}{file_extension_from_url(url)}",
+                    url=url,
+                    build_item=lambda headers, _p=project, _a=asset, _u=url, _t=_direct_asset_target_path(settings, project, asset, url), _k=manifest_key: _manifest_item(
+                        _k, _p, _a, _u, _t, headers
+                    ),
+                    label="PBL 直接附件下载",
+                )
     write_json(settings.processed_dir / "asset_manifest.json", manifest)
     write_json(settings.reports_dir / "download_assets_stats.json", stats.as_dict())
     return manifest
-
-
-def _records_from_response(data: dict[str, Any]) -> list[dict[str, Any]]:
-    payload = data.get("data", {}) if isinstance(data, dict) else {}
-    records = payload.get("courseList", {}).get("records", [])
-    if not records or not isinstance(records, list):
-        records = payload.get("records", [])
-    return [item for item in records if isinstance(item, dict)]
-
-
-def _dedupe_pbl_records(records: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], int]:
-    """Keep one deterministic, most-complete list item per public course ID."""
-    unique: dict[str, dict[str, Any]] = {}
-    duplicates = 0
-    for record in records:
-        business_id = str(record.get("courseExtendId") or record.get("courseId") or "").strip()
-        key = business_id or f"raw:{stable_hash(json.dumps(record, ensure_ascii=False, sort_keys=True))}"
-        existing = unique.get(key)
-        if existing is None:
-            unique[key] = record
-            continue
-        duplicates += 1
-        if _pbl_record_score(record) > _pbl_record_score(existing):
-            unique[key] = record
-    return list(unique.values()), duplicates
-
-
-def _pbl_record_score(record: dict[str, Any]) -> int:
-    fields = (
-        "courseExtendNameCn",
-        "courseNameCn",
-        "productPackageId",
-        "h5Type",
-        "majorMax",
-        "direction",
-        "professorName",
-        "researchName",
-        "attachmentId",
-        "thumbnailId",
-        "courseBanner",
-        "industryPoster",
-    )
-    return sum(value not in (None, "") for value in (record.get(field) for field in fields))
-
-
-def _known_business_ids(paths: list[Path]) -> set[str]:
-    """Load stable PBL business IDs from previous normalized project outputs."""
-    business_ids: set[str] = set()
-    seen_paths: set[Path] = set()
-    for path in paths:
-        resolved = path.resolve()
-        if resolved in seen_paths:
-            continue
-        seen_paths.add(resolved)
-        for project in iter_jsonl(path) or []:
-            business_id = str(project.get("business_id") or "").strip()
-            if business_id:
-                business_ids.add(business_id)
-    return business_ids
 
 
 def _history_project_paths(settings: Settings, supplied_paths: list[Path]) -> list[Path]:
@@ -558,70 +567,10 @@ def _history_project_paths(settings: Settings, supplied_paths: list[Path]) -> li
     return paths
 
 
-def _new_projects(projects: list[dict[str, Any]], known_business_ids: set[str]) -> list[dict[str, Any]]:
-    return [
-        project
-        for project in projects
-        if str(project.get("business_id") or "").strip() not in known_business_ids
-    ]
 
 
-def _normalize_projects(records: list[dict[str, Any]], major_map: dict[str, dict[str, str]]) -> list[dict[str, Any]]:
-    out: list[dict[str, Any]] = []
-    for item in records:
-        business_id = str(item.get("courseExtendId") or item.get("courseId") or "")
-        title = str(item.get("courseExtendNameCn") or item.get("courseNameCn") or business_id)
-        major = major_map.get(str(item.get("majorMax") or ""))
-        category = (major or {}).get("parent_name") or str(item.get("direction") or "uncategorized")
-        source_url = (
-            "https://pbl.hirepglobal.com/Professor"
-            f"?courseExtendId={item.get('courseExtendId')}"
-            f"&productPackageId={item.get('productPackageId')}"
-            f"&h5Type={item.get('h5Type')}"
-        )
-        assets = [
-            {"field": field, "attachment_id": str(item[field])}
-            for field in ("attachmentId", "thumbnailId", "courseBanner", "industryPoster")
-            if item.get(field)
-        ]
-        record = {
-            "business_id": business_id,
-            "title": title,
-            "title_en": item.get("courseNameEn") or item.get("courseExtendNameEn"),
-            "category": category,
-            "direction": item.get("direction"),
-            "major_id": item.get("majorMax"),
-            "major_name": (major or {}).get("name"),
-            "professor": item.get("professorName") or item.get("researchName"),
-            "professor_position": item.get("professorPosition") or item.get("researchPositionCn"),
-            "university": item.get("collegeName") or item.get("researchTakeOfficeSchool"),
-            "description": item.get("researchIntroduceCn") or item.get("researchDirection"),
-            "keywords": _split_keywords(item.get("keywords")),
-            "course_difficulty": item.get("courseDifficulty"),
-            "teaching_mode": item.get("teachingMode"),
-            "first_course_begin_time": item.get("firstCourseBeginTime"),
-            "lecture_course_begin_time": item.get("lectureCourseBeginTime"),
-            "lecture_course_end_time": item.get("lectureCourseEndTime"),
-            "research_course_begin_time": item.get("researchCourseBeginTime"),
-            "research_course_end_time": item.get("researchCourseEndTime"),
-            "source_url": source_url,
-            "canonical_url": canonicalize_url(source_url),
-            "crawled_at": utc_now(),
-            "asset_urls": [],
-            "assets": assets,
-            "raw": item,
-        }
-        out.append(record)
-    return out
 
 
-def _decorate_record(item: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "source_url": "https://pbl.hirepglobal.com/customizePoster",
-        "crawled_at": utc_now(),
-        "business_id": str(item.get("courseExtendId") or item.get("courseId") or ""),
-        "raw": item,
-    }
 
 
 def _asset_refs(projects: list[dict[str, Any]]) -> list[AssetRef]:
@@ -792,10 +741,6 @@ def _load_major_map(path: Path) -> dict[str, dict[str, str]]:
     return result
 
 
-def _split_keywords(value: Any) -> list[str]:
-    if not isinstance(value, str):
-        return []
-    return [part.strip() for part in value.split("|") if part.strip()]
 
 
 def _project_folder(settings: Settings, project: dict[str, Any]) -> Path:
@@ -849,52 +794,6 @@ def _filename_stem(value: Any, *, fallback: str) -> str:
     if suffix in {".pdf", ".jpg", ".jpeg", ".png", ".webp"}:
         return Path(name).stem or fallback
     return name
-
-
-def _asset_manifest_item(
-    manifest_key: str,
-    project: dict[str, Any],
-    asset: dict[str, Any],
-    asset_id: str,
-    url: str,
-    target: Path,
-    headers: dict[str, str],
-) -> dict[str, Any]:
-    return {
-        "manifest_key": manifest_key,
-        "record_title": project.get("title"),
-        "category": project.get("category"),
-        "direction": project.get("direction") or project.get("major_name"),
-        "project_dir": project.get("project_dir") or str(target.parent),
-        "field": asset.get("field"),
-        "attachment_id": asset_id,
-        "source_url": url,
-        "file": str(target),
-        "bytes": target.stat().st_size,
-        "content_type": headers.get("content-type"),
-    }
-
-
-def _direct_asset_manifest_item(
-    manifest_key: str,
-    project: dict[str, Any],
-    asset: dict[str, Any],
-    url: str,
-    target: Path,
-    headers: dict[str, str],
-) -> dict[str, Any]:
-    return {
-        "manifest_key": manifest_key,
-        "record_title": project.get("title"),
-        "category": project.get("category"),
-        "direction": project.get("direction") or project.get("major_name"),
-        "project_dir": project.get("project_dir") or str(target.parent),
-        "field": asset.get("field"),
-        "source_url": url,
-        "file": str(target),
-        "bytes": target.stat().st_size,
-        "content_type": headers.get("content-type"),
-    }
 
 
 def _restore_manifest_file(item: dict[str, Any] | None, target: Path) -> bool:
