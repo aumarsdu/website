@@ -8,11 +8,15 @@
 
 # Python
 .venv/
+*.venv*/
+venv/
+OCR/.venv_*/
 __pycache__/
 *.py[cod]
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+*.egg-info/
 
 # Node
 node_modules/
@@ -30,8 +34,37 @@ output_*/
 */output/
 */output_*/
 
-# Local scraper workspaces
-scraper/集思未来/
+# Local scraper workspaces: code is tracked, data/交付物 never are
+scraper/data_staging/
+scraper/.superpowers/
+scraper/.playwright-mcp/
+scraper/**/.playwright-mcp/
+scraper/**/.reticle/
+scraper/**/Poster/
+scraper/**/poster/
+scraper/**/tmp/
+scraper/**/data/
+scraper/**/archive/
+scraper/**/*.csv
+scraper/**/*.sqlite
+scraper/**/*.sqlite3
+scraper/**/*.ndjson
+scraper/**/*2026年*
+scraper/盐趣/盐趣7-9月项目合集/
+scraper/集思未来/yt_audio_*
+scraper/集思未来/转录结果.md
+scraper/HIREP/HIREP-海报处理-样张*/
+scraper/HIREP/poster_cleanup_inspection/**/*.jpg
+scraper/HIREP/poster_cleanup_inspection/**/*.png
+scraper/HIREP/poster_cleanup_inspection/**/processing_report.json
+scraper/HIREP/poster_cleanup_inspection/**/processing_results.jsonl
+
+# Crawler payloads (large archives, never commit)
+scraper/**/*.zip
+
+# ML model assets (large binaries, never commit)
+models/
+easyocr_models/
 
 # Frontend build outputs
 knowledge/helipei-official/tools/
