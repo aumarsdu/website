@@ -29,6 +29,7 @@ from .scope import is_topic_detail_source, is_topic_list_source
 from .storage import read_json, read_jsonl, write_csv, write_json, write_jsonl, write_sqlite
 from .utils import (
     contains_redacted_value,
+    file_digest,
     file_extension_from_url_or_type,
     is_allowed_url,
     is_public_asset_url,
@@ -979,14 +980,6 @@ def materialize_cached_asset(cache_path: Path, target_path: Path, stats: dict[st
     except OSError:
         shutil.copy2(cache_path, target_path)
         stats["copied"] += 1
-
-
-def file_digest(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1_048_576), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def write_site_detail_files(settings: CrawlSettings, records: list[dict[str, Any]]) -> int:

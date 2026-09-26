@@ -56,6 +56,40 @@ class AuditTests(unittest.TestCase):
         self.assertEqual(manifest["out_of_scope_records"][0]["id"], "gec-1")
         self.assertEqual(audit_summary(report)["current_public_list"]["missing_from_archive"], 0)
 
+    def test_audit_survives_corrupt_json_files(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            settings = CrawlSettings(output_dir=Path(tmp) / "output")
+            in_scope = {
+                "id": "topic-1",
+                "title": "课题一",
+                "source_url": HARBOUR_TOPIC_LIST_URL,
+                "category": "计算机",
+                "direction": "人工智能",
+                "raw": {"id": "topic-1", "name": "课题一"},
+            }
+            write_jsonl(settings.processed_dir / "projects.jsonl", [in_scope])
+            write_json(
+                settings.site_dir / "计算机" / "人工智能" / "课题一" / "details.json",
+                in_scope,
+            )
+            corrupt_detail = settings.site_dir / "计算机" / "人工智能" / "坏文件" / "details.json"
+            corrupt_detail.parent.mkdir(parents=True)
+            corrupt_detail.write_text("{not valid json", encoding="utf-8")
+            write_json(
+                settings.raw_dir / "lists" / "refresh_20260730" / "harbour_topics" / "page_0001.json",
+                {"data": {"result": {"records": [{"id": "topic-1", "name": "课题一"}]}}},
+            )
+            (settings.raw_dir / "lists").mkdir(parents=True, exist_ok=True)
+            (settings.raw_dir / "lists" / "broken.json").write_text("]\xff[", encoding="utf-8")
+
+            report = audit_archive(settings, snapshot_id="20260730")
+
+        self.assertEqual(report["site"]["unreadable_detail_paths"], ["计算机/人工智能/坏文件/details.json"])
+        self.assertEqual(report["out_of_scope"]["unreadable_raw_files"], 1)
+        self.assertEqual(report["out_of_scope"]["raw_files"], 0)
+        self.assertEqual(report["site"]["correctly_placed"], 1)
+        self.assertEqual(audit_summary(report)["site"]["unreadable_detail_paths"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()

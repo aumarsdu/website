@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import shutil
 from pathlib import Path
 from typing import Any
@@ -8,7 +7,7 @@ from typing import Any
 from .config import CrawlSettings
 from .pipeline import download_assets, load_normalized_records, record_key, record_site_dirs
 from .storage import read_json, write_json
-from .utils import now_iso
+from .utils import file_digest, now_iso
 
 
 def archive_snapshot_topics(
@@ -106,11 +105,3 @@ def snapshot_detail_identifiers(settings: CrawlSettings, snapshot_id: str) -> se
 def record_identifier(record: dict[str, Any]) -> str:
     value = record.get("id") or record.get("uuid")
     return str(value) if value not in (None, "") else ""
-
-
-def file_digest(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1_048_576), b""):
-            digest.update(chunk)
-    return digest.hexdigest()

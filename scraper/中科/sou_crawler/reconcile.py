@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import shutil
 from pathlib import Path
 from typing import Any
@@ -9,7 +8,7 @@ from .config import CrawlSettings, ensure_output_dirs
 from .pipeline import load_normalized_records, record_key, record_site_dirs
 from .scope import is_topic_source
 from .storage import read_json, write_json
-from .utils import now_iso
+from .utils import file_digest, now_iso
 
 
 def reconcile_site_layout(settings: CrawlSettings) -> dict[str, Any]:
@@ -64,11 +63,3 @@ def copy_missing_assets(source_dir: Path, target_dir: Path) -> list[str]:
 
 def missing_asset_count(source_dir: Path, target_dir: Path) -> int:
     return sum(1 for source in source_dir.rglob("*") if source.is_file() and source.name != "details.json" and not (target_dir / source.relative_to(source_dir)).exists())
-
-
-def file_digest(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1_048_576), b""):
-            digest.update(chunk)
-    return digest.hexdigest()

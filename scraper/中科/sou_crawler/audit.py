@@ -15,6 +15,7 @@ from .pipeline import (
     record_site_dirs,
     topic_dir_name,
 )
+from .refresh import load_snapshot_topic_ids
 from .scope import (
     HARBOUR_TOPIC_CATEGORY_URL,
     HARBOUR_TOPIC_DETAIL_URL,
@@ -43,7 +44,7 @@ def audit_archive(settings: CrawlSettings, *, snapshot_id: str) -> dict[str, Any
     }
     site = audit_site_layout(settings, in_scope_records)
     assets = audit_assets(settings, in_scope_records)
-    raw_paths = find_out_of_scope_raw_paths(settings)
+    raw_paths, raw_unreadable_paths = find_out_of_scope_raw_paths(settings)
     legacy_assets = find_legacy_asset_dirs(settings, in_scope_records, out_of_scope_records)
     manifest = build_manifest(
         out_of_scope_records,
@@ -83,6 +84,8 @@ def audit_archive(settings: CrawlSettings, *, snapshot_id: str) -> dict[str, Any
             "records": len(out_of_scope_records),
             "site_topic_directories": len(site["out_of_scope_detail_paths"]),
             "raw_files": len(raw_paths),
+            "unreadable_site_details": len(site["unreadable_detail_paths"]),
+            "unreadable_raw_files": len(raw_unreadable_paths),
             "legacy_asset_directories": len(legacy_assets["removable_paths"]),
             "ambiguous_legacy_asset_directories": legacy_assets["ambiguous_paths"],
             "manifest": str(manifest_path),
@@ -112,6 +115,7 @@ def audit_summary(report: dict[str, Any]) -> dict[str, Any]:
             "correctly_placed": report["site"]["correctly_placed"],
             "missing_detail_paths": len(report["site"]["missing_detail_paths"]),
             "misplaced_detail_paths": len(report["site"]["misplaced_detail_paths"]),
+            "unreadable_detail_paths": len(report["site"].get("unreadable_detail_paths", [])),
         },
         "assets": {
             "expected": report["assets"]["expected"],
@@ -129,17 +133,17 @@ def record_identifier(record: dict[str, Any]) -> str | None:
     return str(value) if value not in (None, "") else None
 
 
-def load_snapshot_topic_ids(settings: CrawlSettings, snapshot_id: str) -> set[str]:
-    source_dir = settings.raw_dir / "lists" / f"refresh_{snapshot_id}" / "harbour_topics"
-    if not source_dir.exists():
-        raise FileNotFoundError(f"refresh snapshot not found: {source_dir}")
-    identifiers: set[str] = set()
-    for path in sorted(source_dir.glob("page_*.json")):
+def _read_json_lenient(path: Path) -> dict[str, Any] | None:
+    """Read a JSON payload, returning None for corrupt or unreadable files.
+
+    Audits must survive single bad files in multi-gigabyte output trees; such
+    files are reported separately instead of aborting the run.
+    """
+    try:
         payload = read_json(path)
-        for item in extract_items(payload.get("data")):
-            if isinstance(item, dict):
-                identifiers.add(item_identity(item))
-    return identifiers
+    except (OSError, ValueError):
+        return None
+    return payload if isinstance(payload, dict) else None
 
 
 def audit_site_layout(settings: CrawlSettings, records: list[dict[str, Any]]) -> dict[str, Any]:
@@ -147,8 +151,12 @@ def audit_site_layout(settings: CrawlSettings, records: list[dict[str, Any]]) ->
     expected_paths = {site_dirs[record_key(record)] / "details.json" for record in records}
     actual_in_scope_paths: set[Path] = set()
     out_of_scope_paths: list[Path] = []
+    unreadable_paths: list[Path] = []
     for path in settings.site_dir.rglob("details.json"):
-        payload = read_json(path)
+        payload = _read_json_lenient(path)
+        if payload is None:
+            unreadable_paths.append(path)
+            continue
         if is_topic_source(payload.get("source_url")):
             actual_in_scope_paths.add(path)
         else:
@@ -161,6 +169,7 @@ def audit_site_layout(settings: CrawlSettings, records: list[dict[str, Any]]) ->
         "missing_detail_paths": [str(path.relative_to(settings.site_dir)) for path in sorted(missing_paths)],
         "misplaced_detail_paths": [str(path.relative_to(settings.site_dir)) for path in sorted(misplaced_paths)],
         "out_of_scope_detail_paths": [str(path.relative_to(settings.site_dir)) for path in sorted(out_of_scope_paths)],
+        "unreadable_detail_paths": [str(path.relative_to(settings.site_dir)) for path in sorted(unreadable_paths)],
     }
 
 
@@ -179,14 +188,19 @@ def audit_assets(settings: CrawlSettings, records: list[dict[str, Any]]) -> dict
     }
 
 
-def find_out_of_scope_raw_paths(settings: CrawlSettings) -> list[Path]:
+def find_out_of_scope_raw_paths(settings: CrawlSettings) -> tuple[list[Path], list[Path]]:
+    """Return (out_of_scope_paths, unreadable_paths) for every raw JSON file."""
     paths: list[Path] = []
+    unreadable: list[Path] = []
     for path in settings.raw_dir.rglob("*.json"):
-        payload = read_json(path)
+        payload = _read_json_lenient(path)
+        if payload is None:
+            unreadable.append(path)
+            continue
         source = payload.get("request", {}).get("url") or payload.get("source_api", {}).get("endpoint")
         if source and not is_allowed_raw_source(source):
             paths.append(path)
-    return sorted(paths)
+    return sorted(paths), sorted(unreadable)
 
 
 def find_legacy_asset_dirs(

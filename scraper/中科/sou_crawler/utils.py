@@ -176,3 +176,12 @@ def compact_json_summary(value: Any, depth: int = 0, max_keys: int = 12) -> Any:
             "first": compact_json_summary(value[0], depth + 1, max_keys),
         }
     return type(value).__name__
+
+
+def file_digest(path: Path) -> str:
+    """Stream a file through SHA-256 without loading it fully into memory."""
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1_048_576), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
