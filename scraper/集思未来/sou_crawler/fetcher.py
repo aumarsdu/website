@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 from urllib.error import HTTPError, URLError
@@ -61,6 +62,48 @@ class Fetcher:
         json_body: Any = None,
         headers: dict[str, str] | None = None,
     ) -> tuple[Any | None, dict[str, Any]]:
+        if self.client is None:
+            return await self._request_json_via_urllib(
+                method,
+                url,
+                params=params,
+                json_body=json_body,
+                headers=headers,
+            )
+        stats = self.stats
+
+        def on_request() -> None:
+            stats.pages_requested += 1
+
+        def on_success() -> None:
+            stats.pages_succeeded += 1
+
+        def on_error(category: str) -> None:
+            stats.error(category)
+
+        return await request_json_core(
+            self.client,
+            method=method,
+            url=url,
+            params=params,
+            json_body=json_body,
+            headers=redact_headers(headers) if headers else None,
+            retries=self.config.retries,
+            rate_limit=self.config.rate_limit,
+            on_request=on_request,
+            on_success=on_success,
+            on_error=on_error,
+        )
+
+    async def _request_json_via_urllib(
+        self,
+        method: str,
+        url: str,
+        *,
+        params: dict[str, Any] | None = None,
+        json_body: Any = None,
+        headers: dict[str, str] | None = None,
+    ) -> tuple[Any | None, dict[str, Any]]:
         last_error = "unknown_error"
         for attempt in range(self.config.retries + 1):
             if attempt:
@@ -68,62 +111,22 @@ class Fetcher:
             else:
                 await asyncio.sleep(self.config.rate_limit)
             self.stats.pages_requested += 1
-            if self.client is None:
-                payload, meta = await self._request_json_urllib(
-                    method,
-                    url,
-                    params=params,
-                    json_body=json_body,
-                    headers=headers,
-                )
-                category = meta.get("error_category")
-                if category:
-                    if category in {"http_401_unauthorized", "http_403_forbidden", "http_404_not_found"}:
-                        self.stats.error(category)
-                        if category == "http_403_forbidden":
-                            meta["stop_reason"] = "forbidden"
-                        return None, meta
-                    last_error = category
-                    continue
-                self.stats.pages_succeeded += 1
-                return payload, meta
-            try:
-                response = await self.client.request(
-                    method,
-                    url,
-                    params=params,
-                    json=json_body,
-                    headers=redact_headers(headers) if headers else None,
-                )
-            except httpx.TimeoutException:
-                last_error = "timeout"
-                continue
-            except httpx.HTTPError as exc:
-                LOGGER.warning("http error %s %s: %s", method, url, exc)
-                last_error = "unknown_error"
-                continue
-
-            meta = {
-                "url": str(response.url),
-                "method": method.upper(),
-                "status": response.status_code,
-                "response_headers": redact_headers(dict(response.headers)),
-            }
-            category = classify_status(response.status_code)
-            if response.status_code == 403:
-                self.stats.error(category)
-                return None, {**meta, "error_category": category, "stop_reason": "forbidden"}
-            if response.status_code in {401, 404}:
-                self.stats.error(category)
-                return None, {**meta, "error_category": category}
-            if response.status_code == 429 or 500 <= response.status_code < 600:
+            payload, meta = await self._request_json_urllib(
+                method,
+                url,
+                params=params,
+                json_body=json_body,
+                headers=headers,
+            )
+            category = meta.get("error_category")
+            if category:
+                if category in {"http_401_unauthorized", "http_403_forbidden", "http_404_not_found"}:
+                    self.stats.error(category)
+                    if category == "http_403_forbidden":
+                        meta["stop_reason"] = "forbidden"
+                    return None, meta
                 last_error = category
                 continue
-            try:
-                payload = response.json()
-            except ValueError:
-                self.stats.error("parse_error")
-                return None, {**meta, "error_category": "parse_error", "text_sample": response.text[:500]}
             self.stats.pages_succeeded += 1
             return payload, meta
         self.stats.error(last_error)
@@ -211,6 +214,76 @@ def classify_status(status: int) -> str:
     if 500 <= status < 600:
         return "http_5xx_server_error"
     return "unknown_error"
+
+
+# Statuses that end the request immediately (never retried, never parsed).
+# Workspace compliance rule: access-control answers must not be retried.
+_STOP_STATUS_CODES = frozenset({401, 403, 404})
+
+
+async def request_json_core(
+    client: httpx.AsyncClient,
+    *,
+    method: str,
+    url: str,
+    params: dict[str, Any] | None = None,
+    json_body: Any = None,
+    headers: dict[str, str] | None = None,
+    retries: int,
+    rate_limit: float,
+    on_request: Callable[[], None],
+    on_success: Callable[[], None],
+    on_error: Callable[[str], None],
+    classify_transport_error: Callable[[Exception], str] | None = None,
+) -> tuple[Any | None, dict[str, Any]]:
+    """Single shared implementation of the retry/backoff JSON request loop.
+
+    Rate limiting (attempt 0 sleeps rate_limit, attempt n sleeps rate_limit*2**n),
+    immediate stop on 401/403/404 (403 additionally carries stop_reason="forbidden"),
+    retry on 429/5xx, parse failures reported as parse_error, and response-header
+    redaction before anything lands in meta.
+    """
+    last_error = "unknown_error"
+    for attempt in range(retries + 1):
+        await asyncio.sleep(rate_limit if attempt == 0 else rate_limit * (2**attempt))
+        on_request()
+        try:
+            response = await client.request(method, url, params=params, json=json_body, headers=headers)
+        except httpx.TimeoutException:
+            last_error = "timeout"
+            continue
+        except httpx.HTTPError as exc:
+            if classify_transport_error is not None:
+                last_error = classify_transport_error(exc)
+            else:
+                LOGGER.warning("http error %s %s: %s", method, url, exc)
+                last_error = "unknown_error"
+            continue
+
+        meta = {
+            "url": str(response.url),
+            "method": method.upper(),
+            "status": response.status_code,
+            "response_headers": redact_headers(dict(response.headers)),
+        }
+        if response.status_code in _STOP_STATUS_CODES:
+            category = classify_status(response.status_code)
+            on_error(category)
+            if response.status_code == 403:
+                return None, {**meta, "error_category": category, "stop_reason": "forbidden"}
+            return None, {**meta, "error_category": category}
+        if response.status_code == 429 or response.status_code >= 500:
+            last_error = classify_status(response.status_code)
+            continue
+        try:
+            payload = response.json()
+        except ValueError:
+            on_error("parse_error")
+            return None, {**meta, "error_category": "parse_error", "text_sample": response.text[:500]}
+        on_success()
+        return payload, meta
+    on_error(last_error)
+    return None, {"url": url, "method": method.upper(), "error_category": last_error}
 
 
 def set_query_param(url: str, name: str, value: Any) -> str:

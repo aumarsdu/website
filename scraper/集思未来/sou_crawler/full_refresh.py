@@ -15,6 +15,7 @@ import httpx
 
 from .asset_downloader import asset_filename
 from .config import DEFAULT_USER_AGENT, PROJECT_ROOT, SITE_TARGETS, CrawlConfig
+from .fetcher import request_json_core
 from .normalizer import normalize_outputs
 from .organizer import organize_assets
 from .utils import (
@@ -22,7 +23,6 @@ from .utils import (
     content_hash,
     deep_find_asset_urls,
     iter_jsonl,
-    redact_headers,
     utc_now_iso,
     write_json,
 )
@@ -586,55 +586,36 @@ async def request_json(
     options: RefreshOptions,
     stats: RequestStats,
 ) -> tuple[Any | None, dict[str, Any]]:
-    last_error = "unknown_error"
-    for attempt in range(options.retries + 1):
-        await asyncio.sleep(options.rate_limit if attempt == 0 else options.rate_limit * (2**attempt))
-        stats.pages_requested += 1
-        try:
-            response = await client.request(
-                method,
-                url,
-                json=body,
-                headers={
-                    "Origin": seed.origin,
-                    "Referer": seed.referer,
-                    "Content-Type": "application/json;charset=UTF-8",
-                },
-            )
-        except httpx.TimeoutException:
-            last_error = "timeout"
-            continue
-        except httpx.HTTPError as exc:
-            last_error = classify_protocol_error(exc)
-            continue
+    """Thin wrapper over the shared request loop in sou_crawler.fetcher.
 
-        meta = {
-            "url": str(response.url),
-            "method": method.upper(),
-            "status": response.status_code,
-            "response_headers": redact_headers(dict(response.headers)),
-        }
-        if response.status_code == 404:
-            stats.failed("http_404_not_found")
-            return None, {**meta, "error_category": "http_404_not_found"}
-        if response.status_code == 403:
-            stats.failed("http_403_forbidden")
-            return None, {**meta, "error_category": "http_403_forbidden"}
-        if response.status_code == 429:
-            last_error = "http_429_rate_limited"
-            continue
-        if response.status_code >= 500:
-            last_error = "http_5xx_server_error"
-            continue
-        try:
-            payload = response.json()
-        except ValueError:
-            stats.failed("parse_error")
-            return None, {**meta, "error_category": "parse_error", "text_sample": response.text[:500]}
+    Behavior aligned with the shared core: 401 now stops immediately (it
+    previously fell through to parsing the error body as JSON); 403 additionally
+    carries meta stop_reason="forbidden"; response headers stay redacted.
+    """
+
+    def on_request() -> None:
+        stats.pages_requested += 1
+
+    def on_success() -> None:
         stats.pages_succeeded += 1
-        return payload, meta
-    stats.failed(last_error)
-    return None, {"url": url, "method": method.upper(), "error_category": last_error}
+
+    return await request_json_core(
+        client,
+        method=method,
+        url=url,
+        json_body=body,
+        headers={
+            "Origin": seed.origin,
+            "Referer": seed.referer,
+            "Content-Type": "application/json;charset=UTF-8",
+        },
+        retries=options.retries,
+        rate_limit=options.rate_limit,
+        on_request=on_request,
+        on_success=on_success,
+        on_error=stats.failed,
+        classify_transport_error=classify_protocol_error,
+    )
 
 
 def extract_course_records(payload: Any) -> list[dict[str, Any]]:
