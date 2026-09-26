@@ -1,5 +1,5 @@
 base_url: https://www.openision.com
-user_agent: AuthorizedOpenisionCrawler/1.0 contact=YOUR_EMAIL_HERE
+user_agent: AuthorizedOpenisionCrawler/1.0 contact=aumarsdu@gmail.com
 request_min_delay_seconds: 0.5
 request_max_delay_seconds: 2.0
 concurrency: 1

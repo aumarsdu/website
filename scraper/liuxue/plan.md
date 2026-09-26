@@ -107,7 +107,7 @@ if __name__ == "__main__":
 Run:
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/liuxue/openision-crawler
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/liuxue/openision-crawler
 PYTHONPATH=src python3 -m unittest tests.test_libraries_io -v
 ```
 
@@ -177,7 +177,7 @@ def contains_sensitive_key(value: Any) -> bool:
 Run:
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/liuxue/openision-crawler
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/liuxue/openision-crawler
 PYTHONPATH=src python3 -m unittest tests.test_libraries_io -v
 ```
 
@@ -237,7 +237,7 @@ if __name__ == "__main__":
 Run:
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/liuxue/openision-crawler
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/liuxue/openision-crawler
 PYTHONPATH=src python3 -m unittest tests.test_libraries_normalizers -v
 ```
 
@@ -302,7 +302,7 @@ def normalize_school_tag(value: Any) -> str:
 Run:
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/liuxue/openision-crawler
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/liuxue/openision-crawler
 PYTHONPATH=src python3 -m unittest tests.test_libraries_normalizers -v
 ```
 
@@ -349,7 +349,7 @@ if __name__ == "__main__":
 Run:
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/liuxue/openision-crawler
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/liuxue/openision-crawler
 PYTHONPATH=src python3 -m unittest tests.test_libraries_models -v
 ```
 
@@ -443,7 +443,7 @@ class School:
 Run:
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/liuxue/openision-crawler
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/liuxue/openision-crawler
 PYTHONPATH=src python3 -m unittest tests.test_libraries_models -v
 ```
 
@@ -496,7 +496,7 @@ if __name__ == "__main__":
 Run:
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/liuxue/openision-crawler
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/liuxue/openision-crawler
 PYTHONPATH=src python3 -m unittest tests.test_libraries_programs -v
 ```
 
@@ -555,7 +555,7 @@ def build_programs(source_rows: list[dict[str, Any]], case_counts: dict[str, int
 Run:
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/liuxue/openision-crawler
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/liuxue/openision-crawler
 PYTHONPATH=src python3 -m unittest tests.test_libraries_programs -v
 ```
 
@@ -612,7 +612,7 @@ if __name__ == "__main__":
 Run:
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/liuxue/openision-crawler
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/liuxue/openision-crawler
 PYTHONPATH=src python3 -m unittest tests.test_libraries_cases -v
 ```
 
@@ -685,7 +685,7 @@ def build_cases(source_rows: list[dict[str, Any]]) -> list[AdmissionCase]:
 Run:
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/liuxue/openision-crawler
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/liuxue/openision-crawler
 PYTHONPATH=src python3 -m unittest tests.test_libraries_cases -v
 ```
 
@@ -735,7 +735,7 @@ if __name__ == "__main__":
 Run:
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/liuxue/openision-crawler
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/liuxue/openision-crawler
 PYTHONPATH=src python3 -m unittest tests.test_libraries_schools -v
 ```
 
@@ -805,7 +805,7 @@ def build_schools(programs: list[Program], cases: list[AdmissionCase]) -> list[S
 Run:
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/liuxue/openision-crawler
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/liuxue/openision-crawler
 PYTHONPATH=src python3 -m unittest tests.test_libraries_schools -v
 ```
 
@@ -850,7 +850,7 @@ if __name__ == "__main__":
 Run:
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/liuxue/openision-crawler
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/liuxue/openision-crawler
 PYTHONPATH=src python3 -m unittest tests.test_libraries_quality -v
 ```
 
@@ -893,7 +893,7 @@ def build_quality_report(programs: list[Program], cases: list[AdmissionCase], sc
 Run:
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/liuxue/openision-crawler
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/liuxue/openision-crawler
 PYTHONPATH=src python3 -m unittest tests.test_libraries_quality -v
 ```
 
@@ -945,7 +945,7 @@ if __name__ == "__main__":
 Run:
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/liuxue/openision-crawler
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/liuxue/openision-crawler
 PYTHONPATH=src python3 -m unittest tests.test_libraries_build -v
 ```
 
@@ -1007,7 +1007,7 @@ def build_libraries(project_root: Path) -> dict[str, Any]:
 Run:
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/liuxue/openision-crawler
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/liuxue/openision-crawler
 PYTHONPATH=src python3 -m unittest tests.test_libraries_build -v
 ```
 
@@ -1025,7 +1025,7 @@ Expected: PASS，1 个测试通过。
 Run:
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/liuxue/openision-crawler
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/liuxue/openision-crawler
 sed -n '1,260p' src/openision_crawler/cli.py
 ```
 
@@ -1055,7 +1055,7 @@ if __name__ == "__main__":
 Run:
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/liuxue/openision-crawler
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/liuxue/openision-crawler
 PYTHONPATH=src python3 -m unittest tests.test_libraries_cli -v
 ```
 
@@ -1095,7 +1095,7 @@ if args.command == "build-libraries":
 Run:
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/liuxue/openision-crawler
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/liuxue/openision-crawler
 PYTHONPATH=src python3 -m unittest tests.test_libraries_cli -v
 ```
 
@@ -1143,7 +1143,7 @@ if __name__ == "__main__":
 Run:
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/liuxue/openision-crawler
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/liuxue/openision-crawler
 PYTHONPATH=src python3 -m unittest tests.test_libraries_storage -v
 ```
 
@@ -1179,7 +1179,7 @@ CREATE TABLE IF NOT EXISTS admission_case_library (
 Run:
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/liuxue/openision-crawler
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/liuxue/openision-crawler
 PYTHONPATH=src python3 -m unittest tests.test_libraries_storage -v
 ```
 
@@ -1224,7 +1224,7 @@ PYTHONPATH=src python3 -m openision_crawler.cli build-libraries
 Run:
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/liuxue/openision-crawler
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/liuxue/openision-crawler
 python3 - <<'PY'
 from pathlib import Path
 text = Path("README.md").read_text(encoding="utf-8")
@@ -1253,7 +1253,7 @@ Expected: 输出 `README ok`。
 Run:
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/liuxue/openision-crawler
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/liuxue/openision-crawler
 PYTHONPATH=src python3 -m unittest discover -s tests -v
 ```
 
@@ -1264,7 +1264,7 @@ Expected: PASS，所有测试通过。
 Run:
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/liuxue/openision-crawler
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/liuxue/openision-crawler
 PYTHONPATH=src python3 -m openision_crawler.cli build-libraries
 ```
 
@@ -1279,7 +1279,7 @@ Built libraries: {'programs': 10391, 'cases': 31708, 'schools': 134}
 Run:
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/liuxue/openision-crawler
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/liuxue/openision-crawler
 wc -l data/libraries/program_library.jsonl data/libraries/admission_case_library.jsonl data/libraries/school_library.jsonl
 ```
 
@@ -1296,7 +1296,7 @@ school_library 行数等于派生院校数，当前审计约为 134
 Run:
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/liuxue/openision-crawler
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/liuxue/openision-crawler
 python3 - <<'PY'
 import json
 from pathlib import Path

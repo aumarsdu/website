@@ -28,7 +28,7 @@
 ## 安装
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/dianlu
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/dianlu
 python3.11 -m venv .venv
 . .venv/bin/activate
 python -m pip install -r requirements.txt
@@ -174,7 +174,7 @@ python -m dianedu_archiver report
 ## 测试
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/dianlu
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/dianlu
 python -m pytest
 python -m dianedu_archiver check-site --dry-run
 ```

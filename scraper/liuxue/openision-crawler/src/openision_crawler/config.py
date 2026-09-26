@@ -8,7 +8,7 @@ from typing import Any
 @dataclass(frozen=True)
 class Settings:
     base_url: str = "https://www.openision.com"
-    user_agent: str = "AuthorizedOpenisionCrawler/1.0 contact=YOUR_EMAIL_HERE"
+    user_agent: str = "AuthorizedOpenisionCrawler/1.0 contact=aumarsdu@gmail.com"
     request_min_delay_seconds: float = 0.5
     request_max_delay_seconds: float = 2.0
     concurrency: int = 1

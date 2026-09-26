@@ -16,7 +16,7 @@
 标准库静态侦察无需第三方依赖：
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/liuxue/openision-crawler
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/liuxue/openision-crawler
 python3 -m openision_crawler.cli --help
 ```
 

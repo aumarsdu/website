@@ -150,7 +150,7 @@ data/processed/helipei_summer_programs.sqlite
 ## 运行
 
 ```bash
-cd /Users/liujunliang/Workspace/Projects/archive/knowledge-legacy/scraper/dianlu
+cd /Users/liujunliang/Workspace/knowledge-legacy/scraper/dianlu
 .venv/bin/python -m dianedu_archiver build-helipei-summer-db
 ```
 
