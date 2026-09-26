@@ -138,6 +138,10 @@ async def crawl_pbl_incremental(settings: Settings, known_project_paths: list[Pa
     )
 
 
+_LIST_PAGE_SIZE = 200
+_MAX_LIST_PAGES = 100
+
+
 async def _fetch_list(settings: Settings, *, force_refresh: bool = False) -> dict[str, Any]:
     stats = CrawlStats(started_at=utc_now(), target_domain="pbl_list")
     raw_path = settings.raw_dir / "pbl_ais_cis_page.json"
@@ -149,13 +153,50 @@ async def _fetch_list(settings: Settings, *, force_refresh: bool = False) -> dic
     headers = _api_headers("application/json")
     async with HttpFetcher(settings) as fetcher:
         try:
-            stats.pages_requested += 1
-            data = await fetcher.request_json("POST", LIST_ENDPOINT, json={"pageSize": 10000}, headers=headers)
-            stats.pages_succeeded += 1
-            records = _records_from_response(data)
-            stats.records_extracted = len(records)
-            write_json(raw_path, data)
-            return data
+            merged_records: list[dict[str, Any]] = []
+            seen_ids: set[str] = set()
+            page_response: dict[str, Any] | None = None
+            current_page, total_pages = 1, 1
+            while current_page <= total_pages and current_page <= _MAX_LIST_PAGES:
+                stats.pages_requested += 1
+                data = await fetcher.request_json(
+                    "POST",
+                    LIST_ENDPOINT,
+                    json={"pageSize": _LIST_PAGE_SIZE, "current": current_page},
+                    headers=headers,
+                )
+                stats.pages_succeeded += 1
+                course_list = data.get("data", {}).get("courseList", {}) if isinstance(data, dict) else {}
+                records = course_list.get("records", []) if isinstance(course_list, dict) else []
+                if not isinstance(records, list):
+                    records = []
+                page_ids = [
+                    str(item.get("courseExtendId") or item.get("courseId") or "")
+                    for item in records
+                    if isinstance(item, dict)
+                ]
+                if current_page > 1 and page_ids and all(pid in seen_ids for pid in page_ids):
+                    # Server ignored the `current` parameter: stop before merging duplicates.
+                    LOGGER.warning("PBL 列表接口未按页推进，提前结束分页（第 %s 页）", current_page)
+                    break
+                seen_ids.update(pid for pid in page_ids if pid)
+                merged_records.extend(item for item in records if isinstance(item, dict))
+                try:
+                    total_pages = int(str(course_list.get("pages") if isinstance(course_list, dict) else "1") or 1)
+                except ValueError:
+                    total_pages = 1
+                if page_response is None:
+                    page_response = data
+                current_page += 1
+            if page_response is None:
+                raise RuntimeError("PBL list endpoint returned no response")
+            course_list = page_response.get("data", {}).get("courseList")
+            if isinstance(course_list, dict):
+                course_list["records"] = merged_records
+                course_list["size"] = str(len(merged_records))
+            stats.records_extracted = len(merged_records)
+            write_json(raw_path, page_response)
+            return page_response
         except CrawlStopped:
             stats.pages_failed += 1
             stats.add_error("http_401_or_403_access_control")
