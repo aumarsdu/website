@@ -60,6 +60,20 @@ SUBJECT_TAG_TERMS = {
     "基因编辑",
 }
 
+# Pixel-space heuristics tuned to the 盐趣 poster templates (约1440/1520px 高的导出图)。
+# 它们把海报分区：SUBJECT_TAG_MIN_Y 以上是报头带；课题标题簇必须贴近报头块；
+# 学科标签簇一旦开始（或块位置过低）即结束标题拼接。更换新模板时请整组复核。
+SUBJECT_TAG_MIN_Y = 240           # 忽略此 y 之上的报头带文本块
+TOPIC_BLOCK_MAX_Y = 1200          # 低于此 y 的块不进入标题
+TOPIC_BLOCK_MAX_HEADER_GAP = 900  # 与报头块的最大纵向距离
+SHORT_LINE_MAX_HEADER_GAP = 700   # 短行仅在该距离之外才被丢弃
+SAME_LINE_Y_TOLERANCE = 35        # Δy 在此之内视为同一视觉行
+# 个别海报上的 OCR 噪声清理（过拟合补丁，逐条有注释）：
+TITLE_CLEANUP_PATTERNS = (
+    (re.compile(r"日XLMUSDT,?3$"), ""),  # 某张 7 月海报水印的 OCR 误读
+    (re.compile(r"全\d+$"), ""),         # 某张商科海报尾部的期数残片
+)
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Rename Poster images from their OCR title.")
@@ -96,7 +110,7 @@ def looks_like_subject_tags(text: str) -> bool:
 
 def first_cjk_index(blocks: list[dict[str, Any]]) -> int:
     for index, block in enumerate(blocks):
-        if polygon_y(block) >= 240 and has_cjk(str(block.get("text", ""))):
+        if polygon_y(block) >= SUBJECT_TAG_MIN_Y and has_cjk(str(block.get("text", ""))):
             return index
     return 0
 
@@ -106,7 +120,7 @@ def title_from_record(record: dict[str, Any]) -> str:
     topic_indices = [
         index
         for index, block in enumerate(blocks)
-        if polygon_y(block) >= 240 and any(marker in str(block["text"]) for marker in TOPIC_MARKERS)
+        if polygon_y(block) >= SUBJECT_TAG_MIN_Y and any(marker in str(block["text"]) for marker in TOPIC_MARKERS)
     ]
     header_index = topic_indices[0] if topic_indices else first_cjk_index(blocks)
     header = str(blocks[header_index]["text"]).strip()
@@ -120,15 +134,15 @@ def title_from_record(record: dict[str, Any]) -> str:
     for block in blocks[header_index + 1 :]:
         text = str(block["text"]).strip()
         block_y = polygon_y(block)
-        if subject_cluster_started or block_y > 1200 or block_y - header_y > 900:
+        if subject_cluster_started or block_y > TOPIC_BLOCK_MAX_Y or block_y - header_y > TOPIC_BLOCK_MAX_HEADER_GAP:
             continue
         if not text or not has_cjk(text) or "更新于" in text:
             continue
-        text = re.sub(r"日XLMUSDT,?3$", "", text)
-        text = re.sub(r"全\d+$", "", text)
+        for pattern, replacement in TITLE_CLEANUP_PATTERNS:
+            text = pattern.sub(replacement, text)
         if not text:
             continue
-        if len(text) <= 2 and saw_long_title_line and block_y - header_y > 700:
+        if len(text) <= 2 and saw_long_title_line and block_y - header_y > SHORT_LINE_MAX_HEADER_GAP:
             continue
         if saw_long_title_line and looks_like_subject_tags(text):
             subject_cluster_started = True
@@ -138,7 +152,7 @@ def title_from_record(record: dict[str, Any]) -> str:
             candidate
             for candidate in blocks[header_index + 1 :]
             if has_cjk(str(candidate.get("text", "")))
-            and abs(polygon_y(candidate) - block_y) <= 35
+            and abs(polygon_y(candidate) - block_y) <= SAME_LINE_Y_TOLERANCE
         ]
         short_subject_cluster = len(nearby) >= 2 and all(
             len(str(candidate["text"])) <= 8
