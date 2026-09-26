@@ -1,0 +1,28 @@
+extraction:
+  use_llm_if_available: true
+  require_evidence_for_fields: true
+  unknown_if_no_evidence: true
+  min_confidence_for_auto_accept: 0.75
+  categories:
+    - 科研项目
+    - 论文发表
+    - 国际竞赛
+    - 世界名校夏校
+    - 国际研学
+    - 公益项目
+    - 专业实践
+    - 英语测评
+    - 音乐艺术
+    - 商科挑战
+    - 理工实验室
+    - 其他
+  critical_fields:
+    - project_name
+    - category
+    - target_grade
+    - application_deadline
+    - start_date
+    - location
+    - organizer
+    - price
+    - application_requirement

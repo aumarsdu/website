@@ -1,0 +1,42 @@
+crawl:
+  concurrent_requests: 1
+  concurrent_requests_per_domain: 1
+  download_delay: 1.5
+  randomize_download_delay: false
+  retry_times: 2
+  timeout_seconds: 30
+  obey_robots_txt: true
+  user_agent: "HeLiPeiResearchBot/2.0 authorized-contact=your_email@example.com"
+  start_urls:
+    - "https://www.seedasdan.com/"
+    - "https://www.seedasdan.com/en/home-en/"
+    - "https://www.seedasdan.com/sitemap.xml"
+    - "https://www.seedasdan.com/sitemap_index.xml"
+    - "https://www.seedasdan.com/wp-sitemap.xml"
+  discover:
+    sitemap: true
+    wordpress_api: false
+    homepage_links: true
+    pagination: true
+    assets: true
+  asset_extensions:
+    - ".pdf"
+    - ".doc"
+    - ".docx"
+    - ".xls"
+    - ".xlsx"
+    - ".ppt"
+    - ".pptx"
+    - ".jpg"
+    - ".jpeg"
+    - ".png"
+    - ".webp"
+    - ".gif"
+    - ".svg"
+    - ".mp4"
+    - ".zip"
+    - ".rar"
+  js_rendering:
+    enabled: false
+    only_when_needed: true
+    min_body_text_length: 300

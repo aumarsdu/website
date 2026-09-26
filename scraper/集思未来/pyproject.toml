@@ -1,0 +1,34 @@
+[project]
+name = "sou-crawler"
+version = "0.1.0"
+description = "Authorized crawler and API discovery toolkit for sou-tools.gecacademy.cn"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "httpx>=0.27.0",
+  "playwright>=1.44.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0.0",
+  "ruff>=0.15.0",
+]
+
+[project.scripts]
+sou-crawler = "sou_crawler.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E9", "F63", "F7", "F82", "B"]

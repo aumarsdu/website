@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "seedasdan-intel-engine"
+version = "0.1.0"
+description = "SeedASDAN public project intelligence crawler and structured data engine."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "beautifulsoup4>=4.12",
+  "httpx[socks]>=0.27",
+  "lxml>=5.0",
+  "pydantic>=2.6",
+  "PyMuPDF>=1.24",
+  "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+]
+scrapy = [
+  "scrapy>=2.11",
+  "scrapy-playwright>=0.0.34",
+]
+business = [
+  "pandas>=2.0",
+  "SQLAlchemy>=2.0",
+]
+
+[project.scripts]
+seed-intel = "seed_intel.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"

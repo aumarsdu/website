@@ -1,0 +1,24 @@
+{
+  "skill_name": "authorized-spa-crawler",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "我已经获得授权，需要全量采集一个前端 SPA 网站。首页普通请求只有 JS 壳，请你创建一个 Python 项目：先用 Playwright 捕获 Network/XHR，识别列表/详情/附件接口，再用 API 直抓，输出 raw JSON、CSV、JSONL、SQLite 和报告。",
+      "expected_output": "Creates or outlines a compliant crawler project with Playwright discovery, API classification, direct HTTP crawling, raw and normalized outputs, conservative rate limits, redacted headers, and tests.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "我已经抓到了课程列表和详情，但列表页点击图片会弹出海报。请确认所有课程弹窗海报和首页汇总长图是否都下载了，缺失的单独列出来。",
+      "expected_output": "Identifies poster fields and gallery endpoints, counts total poster URLs, verifies local asset files, downloads missing public posters if needed, and writes poster coverage reports.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "把采集到的素材按网站栏目整理：计算机与人工智能下面放这个栏目里的课题，每个课题单独文件夹，海报文件名用课题名，教授头像文件名用教授名，其它附件按原标签命名。",
+      "expected_output": "Builds an organizer that creates category/topic folders, safely names files, links or copies assets, preserves metadata, handles duplicate category membership, and reports missing assets.",
+      "files": []
+    }
+  ]
+}
+

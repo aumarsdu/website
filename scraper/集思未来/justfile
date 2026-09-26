@@ -1,0 +1,23 @@
+setup:
+    uv sync --extra dev
+
+test:
+    uv run pytest
+
+lint:
+    uv run ruff check .
+
+format:
+    uv run ruff format .
+
+check:
+    uv run ruff check .
+    uv run pytest
+
+secret-scan:
+    gitleaks detect --source ../..
+
+doctor:
+    mise current
+    uv run python --version
+    uv run pytest

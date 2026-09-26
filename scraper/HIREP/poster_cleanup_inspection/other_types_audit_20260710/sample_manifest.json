@@ -1,0 +1,92 @@
+[
+  {
+    "poster_type": "bottom_white_standard",
+    "size": [
+      1080,
+      1520
+    ],
+    "source": "output_pbl_full_20260602/assets/人文/人类学_历史_哲学_政治/历史学：革命真的改变了世界吗？——五场革命与现代欧洲国际秩序的重构研究/海报.jpg",
+    "finish": "Poster/output_pbl_merged_unique_20260710/output_pbl_full_20260602/assets/人文/人类学_历史_哲学_政治/历史学：革命真的改变了世界吗？——五场革命与现代欧洲国际秩序的重构研究/Finish_海报.jpg",
+    "crop_box": [
+      740,
+      1160,
+      1080,
+      1520
+    ]
+  },
+  {
+    "poster_type": "bottom_white_standard",
+    "size": [
+      1080,
+      1521
+    ],
+    "source": "output_pbl_full_20260602/assets/商科/市场营销_管理学/品牌管理：从“玩梗”到“破圈”——从营销组合策略看品牌打造思路/海报-4.jpg",
+    "finish": "Poster/output_pbl_merged_unique_20260710/output_pbl_full_20260602/assets/商科/市场营销_管理学/品牌管理：从“玩梗”到“破圈”——从营销组合策略看品牌打造思路/Finish_海报-4.jpg",
+    "crop_box": [
+      740,
+      1161,
+      1080,
+      1521
+    ]
+  },
+  {
+    "poster_type": "bottom_white_standard",
+    "size": [
+      1081,
+      1521
+    ],
+    "source": "output_pbl_full_20260602/assets/人文/心理学/人类学：人类=直立的猴子？从自然选择到文明演化的人类发展视角/海报-2.jpg",
+    "finish": "Poster/output_pbl_merged_unique_20260710/output_pbl_full_20260602/assets/人文/心理学/人类学：人类=直立的猴子？从自然选择到文明演化的人类发展视角/Finish_海报-2.jpg",
+    "crop_box": [
+      740,
+      1161,
+      1081,
+      1521
+    ]
+  },
+  {
+    "poster_type": "top_right_dark_long",
+    "size": [
+      1080,
+      1700
+    ],
+    "source": "output_pbl_full_20260602/assets/人文/人类学_传媒_社会学_艺术_设计/实验艺术：“无界共生”跨学科视野下的实验艺术多元媒介探索/海报-2.jpg",
+    "finish": "Poster/output_pbl_merged_unique_20260710/output_pbl_full_20260602/assets/人文/人类学_传媒_社会学_艺术_设计/实验艺术：“无界共生”跨学科视野下的实验艺术多元媒介探索/Finish_海报-2.jpg",
+    "crop_box": [
+      760,
+      0,
+      1080,
+      330
+    ]
+  },
+  {
+    "poster_type": "top_right_dark_long",
+    "size": [
+      1080,
+      1701
+    ],
+    "source": "output_pbl_full_20260602/assets/工科/机械工程_电子电气工程_计算机科学/智能感知系统：机器人的“看见”与理解--视觉感知的算法研究/海报-2.jpg",
+    "finish": "Poster/output_pbl_merged_unique_20260710/output_pbl_full_20260602/assets/工科/机械工程_电子电气工程_计算机科学/智能感知系统：机器人的“看见”与理解--视觉感知的算法研究/Finish_海报-2.jpg",
+    "crop_box": [
+      760,
+      0,
+      1080,
+      330
+    ]
+  },
+  {
+    "poster_type": "top_right_dark_long",
+    "size": [
+      1080,
+      1750
+    ],
+    "source": "output_pbl_full_20260602/assets/人文/人类学_传媒_社会学_艺术_设计/电子艺术与交互设计：以黑客帝国为例的VR技术与新媒体艺术策展/海报-3.jpg",
+    "finish": "Poster/output_pbl_merged_unique_20260710/output_pbl_full_20260602/assets/人文/人类学_传媒_社会学_艺术_设计/电子艺术与交互设计：以黑客帝国为例的VR技术与新媒体艺术策展/Finish_海报-3.jpg",
+    "crop_box": [
+      760,
+      0,
+      1080,
+      330
+    ]
+  }
+]
