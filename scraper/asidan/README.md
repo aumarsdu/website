@@ -19,7 +19,7 @@ SeedASDAN 留学项目情报引擎 MVP：抓取公开网页，保存原始数据
 禁止绕过登录、验证码、支付、报名表单或任何访问控制。默认 User-Agent 为透明研究用途标识：
 
 ```text
-HeLiPeiResearchBot/2.0 authorized-contact=your_email@example.com
+HeLiPeiResearchBot/2.0 authorized-contact=aumarsdu@gmail.com
 ```
 
 正式运行前请在 `config/crawl.yaml` 中替换为真实联系邮箱。

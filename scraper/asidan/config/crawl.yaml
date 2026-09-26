@@ -6,7 +6,7 @@ crawl:
   retry_times: 2
   timeout_seconds: 30
   obey_robots_txt: true
-  user_agent: "HeLiPeiResearchBot/2.0 authorized-contact=your_email@example.com"
+  user_agent: "HeLiPeiResearchBot/2.0 authorized-contact=aumarsdu@gmail.com"
   start_urls:
     - "https://www.seedasdan.com/"
     - "https://www.seedasdan.com/en/home-en/"

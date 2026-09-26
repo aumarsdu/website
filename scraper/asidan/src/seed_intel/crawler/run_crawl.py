@@ -86,6 +86,7 @@ def run_crawl(
         timeout=timeout or float(crawl_config["timeout_seconds"]),
         retries=retries if retries is not None else int(crawl_config["retry_times"]),
         rate_limit=rate_limit if rate_limit is not None else float(crawl_config["download_delay"]),
+        obey_robots=bool(crawl_config.get("obey_robots_txt", True)),
     )
 
     cached_pages = storage.load_pages() if resume_batch_id else []
@@ -155,6 +156,7 @@ def run_crawl(
         if kind == "asset" or is_asset_url(result.final_url, asset_extensions):
             storage.save_asset(result.final_url, result.content)
 
+    fetcher.close()
     stats.records_extracted = len(records)
     stats.finished_at = datetime.now(timezone.utc)
     projects_path = storage.save_projects_jsonl(records)
