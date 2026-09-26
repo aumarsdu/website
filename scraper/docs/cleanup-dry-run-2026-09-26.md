@@ -1,7 +1,22 @@
-# scraper 冗余数据清理 dry-run 清单（2026-09-26）
+# scraper 冗余数据清理清单（2026-09-26）
 
-所有 Tier A 条目均已逐字节/计数校验。**本文档仅为清单，未执行任何删除。**
-执行前请再次确认；批量删除建议用 `binrm` 式分批 + 删除前后 `df -h` 对照。
+> **执行状态（2026-09-26 更新）**：Tier A 六项已全部删除并逐项验证（A3/A4 因并行
+> 命令工作目录问题首次未删，已用绝对路径重删并复核）。工作区 115GB → 101GB
+> （约 14GB，部分空间待 APFS 回收）。Tier B / Tier C 仍未执行，等待安排。
+> asidan A6：前批次 20 个独有文件已迁入 `20260816T025031Z_102dea88/`（3091→3111 文件），
+> `20260816T024956Z_ab9521da/` 整目录删除；seed_intel.sqlite 与 silver/gold 无引用。
+
+> **文件夹归一（同日追加，经授权）**：参照集思未来模式（顶层 = 网站顶层分类）：
+> - `HIREP/Poster/`：根级 人文/商科/工科/理科 四目录经 `diff -rq` 验证为交付目录
+>   `HIREP海报-2026年7月10日/` 内同名目录的子集（人文/商科/理科逐字节一致；
+>   工科交付侧多 2 个 `Finish_海报-*.jpg` 新文件），已删除（≈3.1G）；
+>   6 代 `output_pbl_merged_unique_*` 与 `_reports` 移入 `Poster/_intermediate/`（未删除）。
+>   顶层现为：交付目录 + 同名 zip（3219=3219 文件吻合）+ `_intermediate/`。
+> - `中科/Poster/`（中方课题/双教授课题 + _classification）、`盐趣`（学科四分类）、
+>   `集思未来/poster`（by_project_type 与 by_subject 双轴，见 _organization_summary.json）
+>   已符合网站顶层分类模式，未改动。
+
+原始校验记录如下。
 
 硬链接警告：`集思未来/output/organized_by_site/`（341 个硬链接共享同一 74MB PDF）与
 `中科/output/`（cache↔site 硬链接）存在硬链接共享。移动/复制这些目录必须用
