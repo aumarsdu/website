@@ -138,6 +138,81 @@ def write_quality_report(root: Path, records: list[ProjectRecord]) -> Path:
     return path
 
 
+def _record_key(record: ProjectRecord) -> str:
+    return record.project_uid or record.project_name or ""
+
+
+def _canonical(value: dict[str, object]) -> str:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, default=str)
+
+
+def write_change_report(root: Path, records: list[ProjectRecord]) -> dict[str, object]:
+    """Diff the current gold records against the previous detect run.
+
+    Keeps a snapshot of the last run under data/gold/reports so consecutive
+    `detect changes` calls produce added/removed/changed counts instead of a
+    static placeholder.
+    """
+    reports_dir = root / "data" / "gold" / "reports"
+    reports_dir.mkdir(parents=True, exist_ok=True)
+    snapshot_path = reports_dir / "projects_previous.jsonl"
+
+    previous: dict[str, dict[str, object]] = {}
+    if snapshot_path.exists():
+        for item in read_jsonl(snapshot_path):
+            key = str(item.get("_key") or "")
+            if key:
+                previous[key] = item
+
+    current: dict[str, dict[str, object]] = {}
+    for record in records:
+        key = _record_key(record)
+        if key:
+            current[key] = {"_key": key, **record.model_dump()}
+
+    added = sorted(set(current) - set(previous))
+    removed = sorted(set(previous) - set(current))
+    changed = sorted(key for key in set(current) & set(previous) if _canonical(current[key]) != _canonical(previous[key]))
+
+    lines = ["# Change Report", ""]
+    if not previous:
+        lines.append("- Baseline established: no previous snapshot to compare against.")
+    else:
+        lines.append(f"- added: {len(added)}")
+        lines.append(f"- removed: {len(removed)}")
+        lines.append(f"- changed: {len(changed)}")
+        lines.append("")
+        shown = 0
+        total = 0
+        for label, keys, source in (
+            ("Added", added, current),
+            ("Changed", changed, current),
+            ("Removed", removed, previous),
+        ):
+            total += len(keys)
+            shown += min(len(keys), 20)
+            for key in keys[:20]:
+                name = str(source.get(key, {}).get("project_name") or key)
+                lines.append(f"- {label}: {name} ({key})")
+        if total > shown:
+            lines.append(f"- ... {total - shown} more entries omitted")
+    report_path = reports_dir / "change_report.md"
+    report_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    with snapshot_path.open("w", encoding="utf-8") as fh:
+        for item in current.values():
+            fh.write(json.dumps(item, ensure_ascii=False, sort_keys=True, default=str) + "\n")
+
+    return {
+        "change_report": str(report_path),
+        "snapshot": str(snapshot_path),
+        "added": len(added),
+        "removed": len(removed),
+        "changed": len(changed),
+        "baseline": not previous,
+    }
+
+
 def export_all(root: Path, records: list[ProjectRecord]) -> dict[str, str]:
     return {
         "projects_csv": str(export_projects(root, records)),

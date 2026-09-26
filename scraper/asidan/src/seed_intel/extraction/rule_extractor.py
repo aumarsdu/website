@@ -48,6 +48,9 @@ FIELD_PATTERNS: dict[str, list[str]] = {
     "organizer": [
         r"(?:主办方|主办单位|Organizer)[：:\s]*([^\n。；;]{2,80})",
     ],
+    "application_requirement": [
+        r"(?:报名要求|申请要求|申请条件|报名条件|申报条件|Application Requirements?)[：:\s]*([^\n。；;]{4,200})",
+    ],
     "certificate": [
         r"(证书|certificate|结业证明|成果证书)[^\n。；;]{0,80}",
     ],
@@ -152,6 +155,7 @@ def extract_project_from_page(page: ParsedPage) -> ProjectRecord:
         application_deadline=fields.get("application_deadline"),
         location=fields.get("location"),
         organizer=fields.get("organizer"),
+        application_requirement=fields.get("application_requirement"),
         certificate=fields.get("certificate"),
         price=fields.get("price"),
         price_notes=None if fields.get("price") else "页面未明确披露",

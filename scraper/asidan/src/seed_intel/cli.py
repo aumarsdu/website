@@ -13,6 +13,7 @@ from seed_intel.reports.export_report import (
     export_projects,
     export_topics,
     load_latest_projects,
+    write_change_report,
     write_coverage_report,
     write_quality_report,
     write_scores,
@@ -100,10 +101,7 @@ def main(argv: list[str] | None = None) -> int:
         _print_json({"records": len(records), "crm_cards_csv": str(export_crm_cards(root, records))})
         return 0
     if args.command == "detect":
-        path = root / "data" / "gold" / "reports" / "change_report.md"
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text("# Change Report\n\n- MVP baseline: no previous batch comparison available.\n", encoding="utf-8")
-        _print_json({"change_report": str(path)})
+        _print_json(write_change_report(root, records))
         return 0
     if args.command == "export":
         _print_json(export_all(root, records))
@@ -115,8 +113,7 @@ def main(argv: list[str] | None = None) -> int:
         _print_json({"quality_report": str(write_quality_report(root, records))})
         return 0
     if args.command == "report" and args.kind == "changes":
-        path = root / "data" / "gold" / "reports" / "change_report.md"
-        _print_json({"change_report": str(path)})
+        _print_json(write_change_report(root, records))
         return 0
     raise SystemExit(f"unsupported command: {args.command}")
 
