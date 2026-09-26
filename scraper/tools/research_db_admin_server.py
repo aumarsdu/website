@@ -8,6 +8,7 @@ import json
 import re
 import subprocess
 import sys
+import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
@@ -37,7 +38,16 @@ def run_psql(database_url: str, sql: str) -> None:
 
 
 def sql_string(value: str) -> str:
-    return "'" + value.replace("'", "''") + "'"
+    """Render a PostgreSQL string literal (assumes standard_conforming_strings=on)."""
+    text = str(value).replace("\x00", "")
+    return "'" + text.replace("'", "''") + "'"
+
+
+def like_pattern(value: str) -> str:
+    """Escape LIKE wildcards so user input matches literally, wrapped in %...%."""
+    text = str(value).replace("\x00", "")
+    escaped = text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    return f"%{escaped}%"
 
 
 def slug_for(title: str | None, project_id: str) -> str:
@@ -189,25 +199,25 @@ select jsonb_build_object(
         if source:
             where.append(f"s.code = {sql_string(source)}")
         if q:
-            pattern = sql_string(f"%{q}%")
+            pattern = sql_string(like_pattern(q))
             where.append(
                 "("
-                f"p.title ilike {pattern} or "
-                f"coalesce(p.topic_info, '') ilike {pattern} or "
-                f"coalesce(d.project_summary, '') ilike {pattern} or "
+                f"p.title ilike {pattern} escape '\\' or "
+                f"coalesce(p.topic_info, '') ilike {pattern} escape '\\' or "
+                f"coalesce(d.project_summary, '') ilike {pattern} escape '\\' or "
                 f"exists ("
                 f"  select 1"
                 f"  from project_instructors pi"
                 f"  join instructors i on i.id = pi.instructor_id"
                 f"  left join institutions inst on inst.id = i.institution_id"
                 f"  where pi.canonical_project_id = p.id"
-                f"    and (i.name ilike {pattern} or coalesce(inst.name, i.institution_name_raw, '') ilike {pattern})"
+                f"    and (i.name ilike {pattern} escape '\\' or coalesce(inst.name, i.institution_name_raw, '') ilike {pattern} escape '\\')"
                 f") or "
                 f"exists ("
                 f"  select 1"
                 f"  from project_taxonomy_links ptl"
                 f"  join taxonomy_terms tt on tt.id = ptl.taxonomy_term_id"
-                f"  where ptl.canonical_project_id = p.id and tt.name ilike {pattern}"
+                f"  where ptl.canonical_project_id = p.id and tt.name ilike {pattern} escape '\\'"
                 f")"
                 ")"
             )
@@ -360,6 +370,11 @@ select jsonb_build_object(
         self.send_json(run_psql_json(self.database_url, self.project_query_sql(params, public_only=True)))
 
     def handle_visibility(self, project_id: str) -> None:
+        try:
+            uuid.UUID(project_id)
+        except ValueError:
+            self.send_json({"error": "invalid project id"}, status=400)
+            return
         body = self.read_body_json()
         visible = bool(body.get("visible"))
         title_sql = f"select title from canonical_projects where id = {sql_string(project_id)};"
