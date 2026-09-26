@@ -3,28 +3,14 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from .scope import TARGET_ENTRY_URLS
+
 
 DEFAULT_USER_AGENT = "AuthorizedResearchCrawler/1.0"
 
-DEFAULT_ENTRY_URLS = [
-    "https://jf.cas-harbour.cn/avocado/#/",
-    "https://jf.cas-harbour.cn/mini/#/pages/topic/topic",
-    "https://sou-tools.gecacademy.cn/",
-    "https://sou-tools.gecacademy.cn/detailPage?level1=1",
-    "https://sou-tools.gecacademy.cn/detailPage?level1=2",
-    "https://sou-tools.gecacademy.cn/detailPage?level1=3",
-    "https://sou-tools.gecacademy.cn/detailPage?level1=4",
-    "https://sou-tools.gecacademy.cn/detailPage?level1=5",
-    "https://sou-tools.gecacademy.cn/detailPage?level1=6",
-    "https://sou-tools.gecacademy.cn/detailPage?level1=7",
-    "https://sou-tools.gecacademy.cn/detailPage?level1=8",
-    "https://sou-tools.gecacademy.cn/detailPage?level1=9",
-    "https://sou-tools.gecacademy.cn/detailPage?level1=10",
-]
+DEFAULT_ENTRY_URLS = list(TARGET_ENTRY_URLS)
 
 AUTHORIZED_DOMAINS = {
-    "gec-api.gecacademy.cn",
-    "sou-tools.gecacademy.cn",
     "jf.cas-harbour.cn",
 }
 
@@ -107,6 +93,7 @@ class CrawlSettings:
     retries: int = 2
     concurrency: int = 2
     max_pages: int = 20
+    max_details: int | None = 200
     max_assets: int | None = None
     allowed_domains: set[str] = field(default_factory=lambda: set(AUTHORIZED_DOMAINS))
     skipped_asset_hosts: set[str] = field(default_factory=set)
@@ -128,6 +115,14 @@ class CrawlSettings:
         return self.output_dir / "assets"
 
     @property
+    def asset_cache_dir(self) -> Path:
+        return self.output_dir / "cache" / "assets"
+
+    @property
+    def site_dir(self) -> Path:
+        return self.output_dir / "site"
+
+    @property
     def reports_dir(self) -> Path:
         return self.output_dir / "reports"
 
@@ -137,8 +132,11 @@ def ensure_output_dirs(settings: CrawlSettings) -> None:
         settings.discovery_dir,
         settings.raw_dir / "lists",
         settings.raw_dir / "details",
+        settings.raw_dir / "taxonomy",
         settings.processed_dir,
         settings.assets_dir,
+        settings.asset_cache_dir,
+        settings.site_dir,
         settings.reports_dir,
     ):
         path.mkdir(parents=True, exist_ok=True)

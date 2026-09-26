@@ -7,10 +7,15 @@ from pathlib import Path
 from typing import Any
 
 from .api_analyzer import analyze_network_logs
+from .archive import archive_snapshot_topics, download_snapshot_assets
+from .audit import audit_archive, audit_summary
+from .cleanup import cleanup_out_of_scope
 from .config import AUTHORIZED_DOMAINS, CrawlSettings, DEFAULT_ENTRY_URLS
 from .discovery import run_discovery
 from .logging_utils import configure_logging
 from .pipeline import crawl_details, crawl_lists, download_assets, generate_report, normalize, run_all
+from .reconcile import reconcile_site_layout
+from .refresh import backfill_harbour_details, refresh_public_topics
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -28,6 +33,7 @@ def main(argv: list[str] | None = None) -> int:
         retries=args.retries,
         concurrency=args.concurrency,
         max_pages=args.max_pages,
+        max_details=args.max_details,
         max_assets=args.max_assets,
         allowed_domains=allowed_domains,
         skipped_asset_hosts=skipped_asset_hosts,
@@ -50,6 +56,45 @@ def main(argv: list[str] | None = None) -> int:
         result = asyncio.run(crawl_lists(settings, dry_run=args.dry_run))
     elif args.command == "crawl-details":
         result = asyncio.run(crawl_details(settings, dry_run=args.dry_run))
+    elif args.command == "refresh-public-topics":
+        result = asyncio.run(
+            refresh_public_topics(
+                settings,
+                snapshot_id=args.snapshot_id,
+                dry_run=args.dry_run,
+            )
+        )
+    elif args.command == "backfill-details":
+        result = asyncio.run(
+            backfill_harbour_details(
+                settings,
+                snapshot_id=args.snapshot_id,
+                dry_run=args.dry_run,
+            )
+        )
+    elif args.command == "audit-archive":
+        result = audit_summary(audit_archive(settings, snapshot_id=args.snapshot_id))
+    elif args.command == "cleanup-out-of-scope":
+        if not args.confirm:
+            parser.error("cleanup-out-of-scope requires --confirm after reviewing the scope-audit manifest")
+        result = cleanup_out_of_scope(settings, snapshot_id=args.snapshot_id)
+    elif args.command == "reconcile-site-layout":
+        result = reconcile_site_layout(settings)
+    elif args.command == "archive-snapshot-topics":
+        result = archive_snapshot_topics(
+            settings,
+            snapshot_id=args.snapshot_id,
+            target_dir=Path(args.target_dir),
+            dry_run=args.dry_run,
+        )
+    elif args.command == "download-snapshot-assets":
+        result = asyncio.run(
+            download_snapshot_assets(
+                settings,
+                snapshot_id=args.snapshot_id,
+                dry_run=args.dry_run,
+            )
+        )
     elif args.command == "download-assets":
         result = asyncio.run(download_assets(settings, dry_run=args.dry_run))
     elif args.command == "normalize":
@@ -73,6 +118,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--retries", type=int, default=2)
     parser.add_argument("--concurrency", type=int, default=2)
     parser.add_argument("--max-pages", type=int, default=20)
+    parser.add_argument("--max-details", type=int, default=200, help="hard cap for new public detail pages")
     parser.add_argument("--max-assets", type=int)
     parser.add_argument("--allowed-domain", action="append", help="explicitly add an authorized API or asset domain")
     parser.add_argument("--skip-asset-host", action="append", help="mark an unreachable asset host as failed and continue")
@@ -92,6 +138,32 @@ def build_parser() -> argparse.ArgumentParser:
     for command in ("crawl-lists", "crawl-details", "download-assets"):
         sub = subparsers.add_parser(command)
         sub.add_argument("--dry-run", action="store_true")
+
+    refresh = subparsers.add_parser("refresh-public-topics")
+    refresh.add_argument("--snapshot-id", help="append-only snapshot identifier, for example 20260730")
+    refresh.add_argument("--dry-run", action="store_true")
+
+    backfill = subparsers.add_parser("backfill-details")
+    backfill.add_argument("--snapshot-id", required=True, help="refresh snapshot whose public topic details are incomplete")
+    backfill.add_argument("--dry-run", action="store_true")
+
+    audit = subparsers.add_parser("audit-archive")
+    audit.add_argument("--snapshot-id", required=True, help="refresh snapshot used as the current public list baseline")
+
+    cleanup = subparsers.add_parser("cleanup-out-of-scope")
+    cleanup.add_argument("--snapshot-id", required=True, help="scope-audit manifest to validate before deletion")
+    cleanup.add_argument("--confirm", action="store_true", help="perform the irreversible local cleanup")
+
+    subparsers.add_parser("reconcile-site-layout")
+
+    archive = subparsers.add_parser("archive-snapshot-topics")
+    archive.add_argument("--snapshot-id", required=True, help="refresh snapshot whose newly collected topic directories should be copied")
+    archive.add_argument("--target-dir", required=True, help="destination root; preserves category/direction/topic paths")
+    archive.add_argument("--dry-run", action="store_true")
+
+    snapshot_assets = subparsers.add_parser("download-snapshot-assets")
+    snapshot_assets.add_argument("--snapshot-id", required=True, help="refresh snapshot whose public assets should be downloaded")
+    snapshot_assets.add_argument("--dry-run", action="store_true")
 
     subparsers.add_parser("normalize")
     subparsers.add_parser("report")

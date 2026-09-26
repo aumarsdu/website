@@ -20,6 +20,7 @@ class ProjectRecord:
     uuid: str | None = None
     title: str | None = None
     category: str | None = None
+    direction: str | None = None
     teacher: str | None = None
     university: str | None = None
     description: str | None = None
@@ -44,6 +45,7 @@ class ProjectRecord:
             "uuid": self.uuid,
             "title": self.title,
             "category": self.category,
+            "direction": self.direction,
             "teacher": self.teacher,
             "university": self.university,
             "description": self.description,

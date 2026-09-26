@@ -2,13 +2,12 @@
 
 这是一个面向授权网站的 Python 数据采集项目，用于对 SPA/H5 应用进行 Network/API 发现、接口候选分类、公开接口抓取、附件下载、数据清洗和报告生成。
 
-默认入口包含需求中的两个 `jf.cas-harbour.cn` SPA 和 `sou-tools.gecacademy.cn` 页面。默认授权域名为：
+默认采集范围仅包含以下两个 `jf.cas-harbour.cn` SPA：
 
-- `gec-api.gecacademy.cn`
-- `sou-tools.gecacademy.cn`
-- `jf.cas-harbour.cn`
+- 双教授课题（鲸鱼座）：`https://jf.cas-harbour.cn/mini/#/`
+- 中方课题（研途有果）：`https://jf.cas-harbour.cn/avocado/#/`
 
-`gec-api.gecacademy.cn` 是 2026-06-02 对 `sou-tools.gecacademy.cn` 公开前端静态资源做只读扫描时确认的生产 API host。测试环境 host 不默认加入。
+默认授权域名仅为 `jf.cas-harbour.cn`。与这两个页面无关的接口、历史快照和课题记录不属于本项目采集范围。
 
 项目不会实现登录绕过、验证码破解、代理池、UA 轮换、签名破解、接口暴力枚举或任何反风控规避能力。
 
@@ -25,6 +24,7 @@
 - `teacher`
 - `university`
 - `description`
+- `direction`
 - `asset_urls`
 - `raw`
 
@@ -39,6 +39,8 @@ sou_crawler/
   api_analyzer.py     # 接口候选自动分类
   fetcher.py          # httpx 请求、限速、重试、错误分类
   pipeline.py         # 列表/详情/附件/清洗/报告流水线
+  refresh.py          # 已验证公开源的增量快照采集
+  audit.py            # 范围、完整性与目录位置审计
   schema.py           # 结构化记录校验
   storage.py          # JSONL/CSV/SQLite 写入
   utils.py            # URL、脱敏、文件名等工具
@@ -55,6 +57,7 @@ output/
 - 并发：配置项默认 `2`，当前核心请求按保守串行节流执行。
 - 重试：默认最多 `2` 次，只对超时、429、部分 5xx 等安全失败退避重试。
 - 403/401：不重试突破，记录错误并停止当前接口任务。
+- 附件归档：每个唯一 URL 只联网下载一次，内容按 SHA-256 缓存到 `output/cache/assets/`；共享附件在各课题目录中优先以硬链接呈现，不支持硬链接时复制。
 - 敏感信息：发现阶段会对 `cookie`、`authorization`、`token`、`session`、`password` 等请求头或 payload 字段脱敏后再落盘。
 - 鉴权判断：普通 Cookie 只脱敏记录，不单独视为需要鉴权；`authorization`、`x-api-key`、token 类 header 或敏感 POST payload 会让接口标记为 `requires_auth` 并跳过回放。
 - 静态 token 边界：如果前端 JS 中出现写入请求头的 token 字段，本项目只记录字段类型和风险，不输出值、不复制值、不用它回放接口。需要这类接口时，应改用你明确提供的合法服务端授权方式。
@@ -76,6 +79,8 @@ python -m sou_crawler discover
 python -m sou_crawler analyze-apis
 python -m sou_crawler crawl-lists
 python -m sou_crawler crawl-details
+python -m sou_crawler refresh-public-topics --snapshot-id 20260730 --dry-run
+python -m sou_crawler audit-archive --snapshot-id 20260730
 python -m sou_crawler download-assets
 python -m sou_crawler normalize
 python -m sou_crawler report
@@ -88,6 +93,8 @@ python -m sou_crawler all
 python -m sou_crawler --rate-limit 2 --timeout 20 --retries 2 --max-pages 10 crawl-lists
 ```
 
+附件下载的 `--max-assets` 限制的是唯一 URL 数量，而不是课题目录中的引用数量；同一 URL 成功缓存后会同步写入本批涉及的所有课题目录。
+
 如果 discovery 发现的公开 API 使用了新的授权域名，先人工确认它属于授权范围，再显式加入：
 
 ```bash
@@ -98,10 +105,8 @@ python -m sou_crawler --allowed-domain api.example.com crawl-lists --dry-run
 
 默认打开以下入口：
 
+- `https://jf.cas-harbour.cn/mini/#/`
 - `https://jf.cas-harbour.cn/avocado/#/`
-- `https://jf.cas-harbour.cn/mini/#/pages/topic/topic`
-- `https://sou-tools.gecacademy.cn/`
-- `https://sou-tools.gecacademy.cn/detailPage?level1=1` 到 `level1=10`
 
 运行：
 
@@ -141,6 +146,27 @@ python -m sou_crawler analyze-apis
 
 ## 抓取与清洗
 
+### 推荐的中科增量刷新
+
+常规更新优先使用 `refresh-public-topics`。它只调用两个指定页面使用的公开课题列表、课题分类和课题详情接口，不依赖自动候选分类；每次运行保存为不可覆盖的原始快照，并仅补充相对本地基线新增的课题详情。
+
+```bash
+python -m sou_crawler --max-pages 100 --max-details 200 refresh-public-topics --snapshot-id 20260730 --dry-run
+python -m sou_crawler --rate-limit 1.5 --max-pages 100 --max-details 200 refresh-public-topics --snapshot-id 20260730
+python -m sou_crawler audit-archive --snapshot-id 20260730
+python -m sou_crawler normalize
+python -m sou_crawler download-assets
+python -m sou_crawler report
+```
+
+若审计显示当前列表存在历史缺失详情，使用同一快照补采。该命令会跳过已有公开详情，可重复运行至 `remaining_after` 为 `0`：
+
+```bash
+python -m sou_crawler --rate-limit 1.5 --max-details 200 backfill-details --snapshot-id 20260730
+```
+
+先检查 `output/reports/refresh_<批次>.json` 与 `scope_audit_<批次>.json`：只有刷新无失败/截断、当前列表无缺失、目录无错位且范围外清单为空时，才继续 `normalize`。审计只生成清单，不删除文件；范围外内容的批量删除必须在当前对话单独确认。完整执行、海报归档、飞书去重写入与异常处理见 [增量采集工作流程](docs/refresh-workflow.md)。飞书写入属于外部真实服务操作，必须在当前对话获得明确确认后才能执行。
+
 自动分类不可避免会遇到漏判或复杂 POST body。需要人工指定接口时，复制 `config/api_overrides.example.json`：
 
 ```bash
@@ -167,22 +193,34 @@ python -m sou_crawler download-assets
 python -m sou_crawler report
 ```
 
+已有 `output/assets` 素材需要按新目录结构重排时：
+
+```bash
+python3 scripts/rebuild_site_mirror.py --output-dir output
+```
+
+分类/方向来源：`jf.cas-harbour.cn/zhongkehaobo/v2/topic/category` 的课题分类树；缺失时使用项目内置的可审计关键词映射，并在记录中写入 `taxonomy_source`。
+- 当接口字段缺失时，使用项目内置的可审计关键词兜底映射，并在记录中写入 `taxonomy_source`。
+
 ## 输出格式
 
 - 原始列表 JSON：`output/raw/lists/**/page_*.json`
 - 原始详情 JSON：`output/raw/details/**/*.json`
+- 原始分类字典：`output/raw/taxonomy/**/*.json`
 - 结构化 JSONL：`output/processed/projects.jsonl`
 - 结构化 CSV：`output/processed/projects.csv`
 - SQLite：`output/processed/projects.sqlite`
-- 附件：`output/assets/<分类>/<课题名称>/`
+- 网站目录镜像：`output/site/<一级目录>/<方向>/<课题名称>/`
 - 报告：`output/reports/crawl_report.md` 和 `output/reports/crawl_report.json`
+- 范围审计：`output/reports/scope_audit_<批次>.json` 及范围外清单
 
 素材命名规则：
 
-- 课题按 `output/assets/<分类>/<课题名称>/` 建目录。
+- 课题按 `output/site/<一级目录>/<方向>/<课题名称>/` 建目录；例如 `output/site/计算机与人工智能/深度学习/<课题名称>/`。
+- 每个课题目录会写入 `details.json`，包含规范化字段和原始详情页接口返回的完整 `raw` 数据。
 - 海报、封面类字段优先命名为 `<课题名称>.<ext>`。
 - 教授头像类字段优先从同级对象读取教授/教师名称，命名为 `<教授名称>.<ext>`。
-- 其他附件用字段名或原始语义名兜底。
+- PDF 和其他附件用字段名或原始语义名兜底。
 
 ## 已知限制
 
