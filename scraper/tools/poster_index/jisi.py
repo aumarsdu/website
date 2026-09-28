@@ -50,6 +50,9 @@ def _load_organized_posters() -> dict[str, list[Path]]:
                     target = manifest_path.parent.parent / target
                 if target.is_file() and target.stat().st_size > 0 and common.is_image(target):
                     by_rid.setdefault(rid, []).append(target)
+                    processed = target.with_name(f"Finish_{target.name}")
+                    if processed.is_file() and processed not in by_rid[rid]:
+                        by_rid[rid].append(processed)
     return by_rid
 
 

@@ -67,10 +67,17 @@ def _asset_posters_by_bid() -> dict[str, list[Path]]:
                 path = ROOT / path
             if path.is_file() and path.stat().st_size > 0 and common.is_image(path):
                 by_bid.setdefault(bid, []).append(path)
+                processed = path.with_name(f"Finish_{path.name}")
+                if processed.is_file() and processed not in by_bid[bid]:
+                    by_bid[bid].append(processed)
     return by_bid
 
 
 def _pick_asset_poster(candidates: list[Path]) -> Path | None:
+    # 处理版（Finish 标记）优先（需求：广告内页用去二维码版本）
+    for path in candidates:
+        if common.is_processed_name(path.name):
+            return path
     for field in FIELD_PRIORITY:
         for path in candidates:
             if f"::{field}" in str(path):

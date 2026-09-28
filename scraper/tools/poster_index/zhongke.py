@@ -159,10 +159,11 @@ def _poster_stem_map(folder: Path) -> dict[str, dict[str, list[Path]]]:
 def _site_poster_map(folder: Path) -> dict[str, list[Path]]:
     """站点镜像海报：output/site/<分类>/<方向>/<课题[ __uuid]>/图片，按规范化标题索引。"""
     out: dict[str, list[Path]] = {}
+    bad = re.compile(r"speaker|avatar|teacher|banner|icon|logo|header", re.IGNORECASE)
     for f in folder.rglob("*"):
         if f.is_file() and common.is_image(f):
             rel = f.relative_to(folder)
-            if len(rel.parts) < 3:
+            if len(rel.parts) < 3 or bad.search(f.name):
                 continue
             stem = re.sub(r"__[0-9a-f]{16,}$", "", rel.parts[-2], flags=re.IGNORECASE)
             out.setdefault(norm_title(stem), []).append(f)
