@@ -16,12 +16,41 @@ MANIFEST = ROOT / "poster" / "_organization_manifest.json"
 RECORD_BATCHES = [
     ROOT / "output/full_refresh/20260703-new-check/domestic/processed/records.jsonl",
     ROOT / "output/full_refresh/20260703-new-check/sou_tools/processed/records.jsonl",
+    ROOT / "output/incremental/20260928/domestic/processed/records.jsonl",
+    ROOT / "output/incremental/20260928/sou_tools/processed/records.jsonl",
 ]
+ORGANIZED_MANIFESTS = sorted(
+    {*(ROOT.glob("output/incremental/*/reports/organized_assets_manifest.json")),
+      *(ROOT.glob("output/incremental/*/*/reports/organized_assets_manifest.json"))}
+)
 CORPUS_FIELDS = [
     "introduce", "projectBackground", "courseOutlineDetail", "output", "cycle",
     "suggestSenior", "suggestCollege", "suggestBasics", "teacherDetail",
     "teacherSchoolDetail", "dTeacherDetail", "foundationCourseName",
 ]
+
+
+def _load_organized_posters() -> dict[str, list[Path]]:
+    """record_id -> 课程海报 target paths from incremental organized manifests."""
+    by_rid: dict[str, list[Path]] = {}
+    for manifest_path in ORGANIZED_MANIFESTS:
+        try:
+            entries = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        for entry in entries:
+            rid = str(entry.get("id") or "")
+            if not rid:
+                continue
+            for f in entry.get("files") or []:
+                if f.get("role") != "课程海报":
+                    continue
+                target = Path(str(f.get("target") or ""))
+                if not target.is_absolute():
+                    target = manifest_path.parent.parent / target
+                if target.is_file() and target.stat().st_size > 0 and common.is_image(target):
+                    by_rid.setdefault(rid, []).append(target)
+    return by_rid
 
 
 def _load_manifest() -> dict[str, dict[str, Any]]:
@@ -63,6 +92,7 @@ def _instructors(raw: dict[str, Any]) -> list[str]:
 
 def build(root: Path = ROOT) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     manifest = _load_manifest()
+    organized_posters = _load_organized_posters()
     records, per_file = _load_records()
     records = common.dedup_keep_latest(
         records, key_fn=lambda r: str((r.get("raw") or {}).get("id") or r.get("id") or ""),
@@ -87,6 +117,8 @@ def build(root: Path = ROOT) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         rid = str(raw.get("id") or record.get("id") or "")
         entry = manifest.get(rid)
         candidates = [f for f in poster_files if rid in f.name]
+        if not candidates:
+            candidates = organized_posters.get(rid, [])
         selected, variant, usable = common.select_poster(candidates, manifest_sha256=(entry or {}).get("sha256"))
         if selected is None:
             missing_posters.append(rid)
