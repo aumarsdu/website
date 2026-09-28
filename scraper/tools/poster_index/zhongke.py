@@ -122,9 +122,13 @@ def _load_records(path: Path, id_fields: tuple[str, ...]) -> list[dict[str, Any]
             record = json.loads(line)
             record["_source_file"] = str(path)
             records.append(record)
+    # 需求 5.1：同一课题只保留一条。中科的 uuid 是"每次抓取记录"的标识，
+    # 同名课题会被多批次重复抓取（同一标题最多 23 条记录），
+    # 因此业务去重键 = 课题标题（与海报目录组织一致），无标题时退回 uuid。
     return common.dedup_keep_latest(
         records,
-        key_fn=lambda r: next((str(r.get(f) or "") for f in id_fields if r.get(f)), ""),
+        key_fn=lambda r: (str(r.get("title") or "").strip() or next(
+            (str(r.get(f) or "") for f in id_fields if r.get(f)), "")),
         crawled_fn=lambda r: r.get("crawled_at"),
     )
 
@@ -297,6 +301,7 @@ def build(root: Path = ROOT) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     report = {
         "total_courses": len(shuang) + len(zhongfang),
         "posters_found": len(items),
+        "missing_poster_count": len(missing_posters),
         "missing_poster_ids": sorted(missing_posters)[:200],
         "orphan_poster_files": len(orphan_posters),
         "with_school_begins": with_dates,
