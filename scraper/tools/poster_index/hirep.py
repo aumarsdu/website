@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import json
+import re
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -14,6 +15,7 @@ from .common import SCRAPER_ROOT
 SUPPLIER = "HIREP"
 ROOT = SCRAPER_ROOT / "HIREP"
 OCT_DIR = ROOT / "HIREP-海报处理-2026年10月1日以后"
+PROC_POSTER_DIR = ROOT / "HIREP-海报处理-2026年10月1日以后"
 SELECTION = ROOT / "HIREP-开课时间-2026年10月1日以后" / "poster_selection_manifest.json"
 # 资产字段优先级：行业海报 > 主附件 > 课程横幅 > 缩略图
 FIELD_PRIORITY = ["industryPoster", "attachmentId", "courseBanner", "thumbnailId"]
@@ -31,6 +33,19 @@ def _load_records() -> list[dict[str, Any]]:
                 record["_source_file"] = str(projects)
                 records.append(record)
     return records
+
+
+def _processed_by_bid() -> dict[str, Path]:
+    """business_id -> 海报处理交付中的去码海报（目录名以 __business_id 结尾）。"""
+    by_bid: dict[str, Path] = {}
+    if not OCT_DIR.exists():
+        return by_bid
+    for f in OCT_DIR.rglob("*"):
+        if f.is_file() and common.is_image(f) and f.name == "海报.jpg":
+            m = re.search(r"__([0-9]{6,})$", f.parent.name)
+            if m:
+                by_bid.setdefault(m.group(1), f)
+    return by_bid
 
 
 def _load_selection() -> dict[str, dict[str, Any]]:
@@ -93,6 +108,7 @@ def build(root: Path = ROOT) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     )
     selection = _load_selection()
     assets = _asset_posters_by_bid()
+    processed_by_bid = _processed_by_bid()
 
     items: list[dict[str, Any]] = []
     missing_posters: list[str] = []
@@ -112,14 +128,19 @@ def build(root: Path = ROOT) -> tuple[list[dict[str, Any]], dict[str, Any]]:
 
         candidates: list[Path] = []
         variant = "raw"
+        processed_copy = processed_by_bid.get(bid)
+        if processed_copy is not None:
+            candidates = [processed_copy]
+            variant = "processed"
         entry = selection.get(bid)
-        if entry:
+        if not candidates and entry:
             output = Path(str(entry.get("output") or ""))
             if not output.is_absolute():
                 output = ROOT / output
             if output.is_file() and output.stat().st_size > 0:
+                # 开课时间交付副本为未去码原图，标记 raw（海报处理版缺失时的回退）
                 candidates = [output]
-                variant = "processed"
+                variant = "raw"
         if not candidates:
             picked = _pick_asset_poster(assets.get(bid, []))
             if picked is not None:
