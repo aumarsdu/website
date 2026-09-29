@@ -65,7 +65,7 @@ class FetchListPaginationTest(unittest.TestCase):
         self.assertEqual(len(saved["data"]["courseList"]["records"]), 3)
         self.assertEqual(saved["data"]["courseList"]["size"], "3")
 
-    def test_fetch_list_stops_when_server_ignores_current(self):
+    def test_fetch_list_stops_when_server_ignores_current_then_falls_back(self):
         page = self._response([{"courseExtendId": "a"}, {"courseExtendId": "b"}], 3)
         fake = _FakeListFetcher([page])
 
@@ -73,7 +73,24 @@ class FetchListPaginationTest(unittest.TestCase):
 
         records = pbl_crawler._records_from_response(data)
         self.assertEqual([r["courseExtendId"] for r in records], ["a", "b"])
-        self.assertEqual(len(fake.calls), 2)
+        # 第 1、2 页 + 回退单请求，共 3 次调用；回退无增益时保留原结果
+        self.assertEqual(len(fake.calls), 3)
+        self.assertEqual(fake.calls[-1]["pageSize"], 999)  # total=999 回退上限内
+
+    def test_fetch_list_fallback_recovers_full_list_when_server_ignores_current(self):
+        # 页 1/2 与页 2 相同（服务端忽略 current），但单请求大 pageSize 能拿全量
+        page = self._response([{"courseExtendId": "a"}, {"courseExtendId": "b"}], 3)
+        full = self._response(
+            [{"courseExtendId": c} for c in ("a", "b", "c", "d", "e")], 1
+        )
+        fake = _FakeListFetcher([page, page, full])
+
+        data, saved = self._run_fetch_list(fake)
+
+        records = pbl_crawler._records_from_response(data)
+        self.assertEqual([r["courseExtendId"] for r in records], ["a", "b", "c", "d", "e"])
+        self.assertEqual(len(fake.calls), 3)
+        self.assertEqual(len(saved["data"]["courseList"]["records"]), 5)
 
 
 if __name__ == "__main__":

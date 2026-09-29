@@ -181,6 +181,7 @@ async def _fetch_list(settings: Settings, *, force_refresh: bool = False) -> dic
             seen_ids: set[str] = set()
             page_response: dict[str, Any] | None = None
             current_page, total_pages = 1, 1
+            no_progress = False
             while current_page <= total_pages and current_page <= _MAX_LIST_PAGES:
                 stats.pages_requested += 1
                 data = await fetcher.request_json(
@@ -202,6 +203,7 @@ async def _fetch_list(settings: Settings, *, force_refresh: bool = False) -> dic
                 if current_page > 1 and page_ids and all(pid in seen_ids for pid in page_ids):
                     # Server ignored the `current` parameter: stop before merging duplicates.
                     LOGGER.warning("PBL 列表接口未按页推进，提前结束分页（第 %s 页）", current_page)
+                    no_progress = True
                     break
                 seen_ids.update(pid for pid in page_ids if pid)
                 merged_records.extend(item for item in records if isinstance(item, dict))
@@ -212,6 +214,27 @@ async def _fetch_list(settings: Settings, *, force_refresh: bool = False) -> dic
                 if page_response is None:
                     page_response = data
                 current_page += 1
+            if no_progress and page_response is not None:
+                # 回退：站点历史上支持单请求大 pageSize（2026-06 全量即此方式），
+                # 按首页 total 拉全量，上限 5000 防失控。
+                try:
+                    total_count = int(str(page_response.get("data", {}).get("courseList", {}).get("total", "")) or 0)
+                except (ValueError, AttributeError, TypeError):
+                    total_count = 0
+                page_size = min(max(total_count, _LIST_PAGE_SIZE), 5000)
+                LOGGER.warning("PBL 列表回退单请求: pageSize=%s", page_size)
+                stats.pages_requested += 1
+                data = await fetcher.request_json(
+                    "POST",
+                    LIST_ENDPOINT,
+                    json={"pageSize": page_size, "current": 1},
+                    headers=headers,
+                )
+                stats.pages_succeeded += 1
+                fallback_records = data.get("data", {}).get("courseList", {}).get("records", []) if isinstance(data, dict) else []
+                if isinstance(fallback_records, list) and len(fallback_records) > len(merged_records):
+                    merged_records = [item for item in fallback_records if isinstance(item, dict)]
+                    page_response = data
             if page_response is None:
                 raise RuntimeError("PBL list endpoint returned no response")
             course_list = page_response.get("data", {}).get("courseList")
