@@ -9,7 +9,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-from . import common
+from . import common, direction
 from .common import SCRAPER_ROOT
 
 SUPPLIER = "HIREP"
@@ -119,11 +119,13 @@ def build(root: Path = ROOT) -> tuple[list[dict[str, Any]], dict[str, Any]]:
 
     for record in records:
         bid = str(record.get("business_id") or "")
-        subject = common.map_subject(record.get("category"))
-        subject_source = "supplier" if subject else None
-        if subject is None:
-            subject = "其他"
-            subject_source = "tagged"
+        subject_original = common.map_subject(record.get("category")) or "其他"
+        tagged = direction.classify(
+            str(record.get("title") or ""),
+            corpus=str(record.get("description") or ""),
+            override_key=f"{SUPPLIER}:{bid}",
+        )
+        subject = tagged["subject"]
         subject_counts[subject] = subject_counts.get(subject, 0) + 1
 
         candidates: list[Path] = []
@@ -179,7 +181,11 @@ def build(root: Path = ROOT) -> tuple[list[dict[str, Any]], dict[str, Any]]:
             recordId=bid,
             title=str(record.get("title") or ""),
             subject=subject,
-            subjectSource=subject_source,
+            subjectSource=tagged["directionBasis"]["source"],
+            subjectOriginal=subject_original,
+            direction=tagged["direction"],
+            directionSecondary=tagged["directionSecondary"],
+            directionBasis=tagged["directionBasis"],
             projectType="PBL科研课题",
             schoolBegins=begins,
             instructors=[i for i in instructors if i],
@@ -202,5 +208,6 @@ def build(root: Path = ROOT) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         "poster_variant_distribution": variant_counts,
         "selection_october_copied": len(selection),
         "october_delivery_exists": OCT_DIR.exists(),
+        **direction.summarize(items),
     }
     return items, report

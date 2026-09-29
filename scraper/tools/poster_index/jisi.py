@@ -7,7 +7,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-from . import common
+from . import common, direction
 from .common import SCRAPER_ROOT
 
 SUPPLIER = "集思未来"
@@ -127,11 +127,13 @@ def build(root: Path = ROOT) -> tuple[list[dict[str, Any]], dict[str, Any]]:
             missing_posters.append(rid)
             continue
 
-        subject = common.map_subject((entry or {}).get("subject"))
-        subject_source = "supplier"
-        if subject is None:
-            subject = "其他"
-            subject_source = "tagged"
+        subject_original = common.map_subject((entry or {}).get("subject")) or "其他"
+        tagged = direction.classify(
+            str(raw.get("name") or record.get("name") or ""),
+            corpus=str(raw.get("introduce") or ""),
+            override_key=f"{SUPPLIER}:{rid}",
+        )
+        subject = tagged["subject"]
         subject_counts[subject] = subject_counts.get(subject, 0) + 1
         variant_counts[variant] = variant_counts.get(variant, 0) + 1
 
@@ -146,7 +148,11 @@ def build(root: Path = ROOT) -> tuple[list[dict[str, Any]], dict[str, Any]]:
             recordId=rid,
             title=str(raw.get("name") or record.get("name") or ""),
             subject=subject,
-            subjectSource=subject_source,
+            subjectSource=tagged["directionBasis"]["source"],
+            subjectOriginal=subject_original,
+            direction=tagged["direction"],
+            directionSecondary=tagged["directionSecondary"],
+            directionBasis=tagged["directionBasis"],
             projectType=str((entry or {}).get("project_type") or ""),
             schoolBegins=begins,
             instructors=_instructors(raw),
@@ -169,5 +175,6 @@ def build(root: Path = ROOT) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         "poster_variant_distribution": variant_counts,
         "records_per_file": per_file,
         "manifest_entries": len(manifest),
+        **direction.summarize(items),
     }
     return items, report

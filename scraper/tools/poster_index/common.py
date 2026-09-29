@@ -121,13 +121,17 @@ def select_poster(
 
 
 def build_item(**fields: Any) -> dict[str, Any]:
-    """Validate and normalize one 4.1 index item."""
+    """Validate and normalize one index item (4.1 + 细分方向标签 §5/§8-D1)."""
     item = {
         "supplier": fields.get("supplier"),
         "recordId": str(fields.get("recordId") or ""),
         "title": str(fields.get("title") or ""),
         "subject": fields.get("subject"),
         "subjectSource": fields.get("subjectSource"),
+        "subjectOriginal": fields.get("subjectOriginal"),
+        "direction": fields.get("direction"),
+        "directionSecondary": fields.get("directionSecondary"),
+        "directionBasis": fields.get("directionBasis"),
         "projectType": str(fields.get("projectType") or ""),
         "schoolBegins": fields.get("schoolBegins"),
         "instructors": list(fields.get("instructors") or []),
@@ -139,13 +143,22 @@ def build_item(**fields: Any) -> dict[str, Any]:
         "sourceFile": str(fields.get("sourceFile") or ""),
         "crawledAt": fields.get("crawledAt"),
     }
-    missing = [k for k in ("supplier", "subject", "subjectSource", "posterVariant") if not item[k]]
+    missing = [k for k in ("supplier", "subject", "subjectSource", "posterVariant",
+                           "direction", "directionBasis", "subjectOriginal") if not item[k]]
     if missing:
         raise IndexItemError(f"item {item['recordId'] or item['title'][:20]} missing {missing}")
     if item["subject"] not in SUBJECTS:
         raise IndexItemError(f"item {item['recordId']}: subject {item['subject']!r} not in enum")
-    if item["subjectSource"] not in ("supplier", "tagged"):
-        raise IndexItemError(f"item {item['recordId']}: subjectSource must be supplier|tagged")
+    # D1: subjectSource = direction 判定来源
+    if item["subjectSource"] not in ("label", "title", "corpus", "override"):
+        raise IndexItemError(f"item {item['recordId']}: subjectSource must be label|title|corpus|override")
+    from .direction import allowed_directions
+    if item["direction"] not in allowed_directions():
+        raise IndexItemError(f"item {item['recordId']}: direction {item['direction']!r} not in taxonomy")
+    if item["directionSecondary"] is not None and item["directionSecondary"] not in allowed_directions():
+        raise IndexItemError(f"item {item['recordId']}: directionSecondary {item['directionSecondary']!r} not in taxonomy")
+    if not isinstance(item["directionBasis"], dict) or "source" not in item["directionBasis"]:
+        raise IndexItemError(f"item {item['recordId']}: directionBasis must be an object with source")
     if item["posterVariant"] not in ("processed", "raw"):
         raise IndexItemError(f"item {item['recordId']}: posterVariant must be processed|raw")
     if not item["recordId"] or not item["title"] or not item["posterPath"] or not item["posterSha256"]:
@@ -173,6 +186,7 @@ def find_in_index(
     items: Iterable[dict[str, Any]],
     *,
     subject: str | None = None,
+    direction: str | None = None,
     project_type: str | None = None,
     begins_from: str | None = None,
     begins_to: str | None = None,
@@ -185,6 +199,8 @@ def find_in_index(
     out = []
     for item in items:
         if subject and item["subject"] != subject:
+            continue
+        if direction and item.get("direction") != direction:
             continue
         if project_type and item["projectType"] != project_type:
             continue

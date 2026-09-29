@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from . import common, hirep, jisi, zhongke
+from . import common, direction, hirep, jisi, zhongke
 
 SUPPLIERS = {"集思未来": jisi, "HIREP": hirep, "中科浩博": zhongke}
 
@@ -47,6 +47,7 @@ def cmd_find(args: argparse.Namespace) -> int:
     matched = common.find_in_index(
         items,
         subject=args.subject,
+        direction=args.direction,
         project_type=args.type,
         begins_from=args.begins_from,
         begins_to=args.begins_to,
@@ -56,10 +57,10 @@ def cmd_find(args: argparse.Namespace) -> int:
     if args.json:
         print(json.dumps(matched, ensure_ascii=False, indent=1, default=str))
         return 0
-    print(f"{'供应商':<6} {'学科':<10} {'开课':<12} {'类型':<14} 课题 / 海报")
+    print(f"{'供应商':<6} {'学科':<10} {'细分方向':<12} {'开课':<12} 课题 / 海报")
     for item in matched:
         begins = item.get("schoolBegins") or "—"
-        print(f"{item['supplier']:<6} {item['subject']:<10} {begins:<12} {item['projectType'][:14]:<14} "
+        print(f"{item['supplier']:<6} {item['subject']:<10} {item.get('direction', ''):<12} {begins:<12} "
               f"{item['title'][:36]}  {item['posterPath']}")
     print(f"-- 共 {len(matched)} 条", file=sys.stderr)
     return 0
@@ -75,6 +76,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_find = sub.add_parser("find", help="按条件列出课题")
     p_find.add_argument("--supplier", choices=[*SUPPLIERS, "all"], required=True)
     p_find.add_argument("--subject", choices=common.SUBJECTS, default=None)
+    p_find.add_argument("--direction", choices=list(direction.allowed_directions()), default=None, help="细分方向（受控词表）")
     p_find.add_argument("--type", dest="type", default=None, help="项目类型精确匹配")
     p_find.add_argument("--begins-from", default=None, help="YYYY-MM-DD")
     p_find.add_argument("--begins-to", default=None, help="YYYY-MM-DD")
