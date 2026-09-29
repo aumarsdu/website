@@ -1,0 +1,16 @@
+{
+  "version": "2026-09-29",
+  "source": "一次性从 20260703-new-check 批次（清单覆盖的 1434 条）反推：raw.typeId -> _organization_manifest.json 的 project_type（多数派）。歧义 typeId（双值）标 ambiguous，命中时降级进待确认。",
+  "map": {
+    "1":  {"project_type": "专业选修课程", "ambiguous": false},
+    "4":  {"project_type": "实验室RA项目", "ambiguous": false},
+    "6":  {"project_type": "PBL小组科研标准版", "ambiguous": true, "candidates": {"PBL小组科研标准版": 260, "研助起航计划": 129}},
+    "32": {"project_type": "PBL小组科研标准版", "ambiguous": true, "candidates": {"PBL小组科研标准版": 144, "研助起航计划": 78}},
+    "38": {"project_type": "2026暑期线下营地项目", "ambiguous": false},
+    "39": {"project_type": "2026暑期线下营地项目", "ambiguous": false},
+    "44": {"project_type": "PBL小组科研标准版", "ambiguous": true, "candidates": {"PBL小组科研标准版": 71, "研助起航计划": 42}},
+    "45": {"project_type": "职业通途计划", "ambiguous": false},
+    "56": {"project_type": "全球在研", "ambiguous": false},
+    "57": {"project_type": "Astra 1v1", "ambiguous": false}
+  }
+}

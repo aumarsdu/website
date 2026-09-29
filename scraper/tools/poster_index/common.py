@@ -18,6 +18,8 @@ SCRAPER_ROOT = Path("/Users/liujunliang/Workspace/knowledge-legacy/scraper")
 OUTPUT_DIR = Path.home() / "Workspace" / "_private-tasks" / "xhs-cover-gen" / "posters"
 
 SUBJECTS = ("计算机与人工智能", "理工科", "金融商科", "人文社科", "其他")
+# 授课形式（索引修正需求 §2，军亮 2026-09-29 确认四值）
+FORMATS = ("小组科研", "班课科研", "1V1", "其他")
 
 # 供应商/站点原始分类 → 统一学科（需求 5.3 映射表）
 SUPPLIER_SUBJECT_MAP = {
@@ -133,6 +135,7 @@ def build_item(**fields: Any) -> dict[str, Any]:
         "directionSecondary": fields.get("directionSecondary"),
         "directionBasis": fields.get("directionBasis"),
         "projectType": str(fields.get("projectType") or ""),
+        "format": fields.get("format"),
         "schoolBegins": fields.get("schoolBegins"),
         "instructors": list(fields.get("instructors") or []),
         "corpus": fields.get("corpus") or {},
@@ -159,6 +162,8 @@ def build_item(**fields: Any) -> dict[str, Any]:
         raise IndexItemError(f"item {item['recordId']}: directionSecondary {item['directionSecondary']!r} not in taxonomy")
     if not isinstance(item["directionBasis"], dict) or "source" not in item["directionBasis"]:
         raise IndexItemError(f"item {item['recordId']}: directionBasis must be an object with source")
+    if item["format"] not in FORMATS:
+        raise IndexItemError(f"item {item['recordId']}: format {item['format']!r} not in {FORMATS}")
     if item["posterVariant"] not in ("processed", "raw"):
         raise IndexItemError(f"item {item['recordId']}: posterVariant must be processed|raw")
     if not item["recordId"] or not item["title"] or not item["posterPath"] or not item["posterSha256"]:
@@ -215,4 +220,28 @@ def find_in_index(
     out.sort(key=lambda i: (i.get("schoolBegins") is None, i.get("schoolBegins") or "", i["title"]))
     if limit:
         out = out[:limit]
+    return out
+
+
+def resolve_format(supplier: str, project_type: str) -> str:
+    """projectType -> format（format_map.json 配置，未映射走 fallback=其他）。"""
+    cfg = json.loads((Path(__file__).resolve().parent / "format_map.json").read_text(encoding="utf-8"))
+    mapped = cfg.get("maps", {}).get(supplier, {}).get(project_type)
+    if mapped in FORMATS:
+        return str(mapped)
+    return str(cfg.get("fallback") or "其他")
+
+
+def format_distribution(items: list[dict[str, Any]], *, today: str | None = None) -> dict[str, dict[str, int]]:
+    """报告：按 format 的课题数与可报名数（索引修正需求 §3）。"""
+    from datetime import date as _date
+
+    today = today or _date.today().isoformat()
+    out: dict[str, dict[str, int]] = {}
+    for item in items:
+        slot = out.setdefault(str(item.get("format")), {"courses": 0, "open": 0})
+        slot["courses"] += 1
+        begins = item.get("schoolBegins")
+        if begins and begins > today:
+            slot["open"] += 1
     return out

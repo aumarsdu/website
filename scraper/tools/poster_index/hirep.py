@@ -187,6 +187,7 @@ def build(root: Path = ROOT) -> tuple[list[dict[str, Any]], dict[str, Any]]:
             directionSecondary=tagged["directionSecondary"],
             directionBasis=tagged["directionBasis"],
             projectType="PBL科研课题",
+            format=common.resolve_format(SUPPLIER, "PBL科研课题"),
             schoolBegins=begins,
             instructors=[i for i in instructors if i],
             corpus=corpus,
@@ -208,6 +209,7 @@ def build(root: Path = ROOT) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         "poster_variant_distribution": variant_counts,
         "selection_october_copied": len(selection),
         "october_delivery_exists": OCT_DIR.exists(),
+        "format_distribution": common.format_distribution(items),
         **direction.summarize(items),
     }
     return items, report

@@ -163,6 +163,7 @@ def build(root: Path = ROOT) -> tuple[list[dict[str, Any]], dict[str, Any]]:
             directionSecondary=tagged["directionSecondary"],
             directionBasis=tagged["directionBasis"],
             projectType="双教授课题（鲸鱼座）",
+            format=common.resolve_format(SUPPLIER, "双教授课题（鲸鱼座）"),
             schoolBegins=begins,
             instructors=[instructor] if instructor else [],
             corpus=corpus,
@@ -218,6 +219,7 @@ def build(root: Path = ROOT) -> tuple[list[dict[str, Any]], dict[str, Any]]:
             directionSecondary=tagged["directionSecondary"],
             directionBasis=tagged["directionBasis"],
             projectType="中方课题（研途有果）",
+            format=common.resolve_format(SUPPLIER, "中方课题（研途有果）"),
             schoolBegins=begins,
             instructors=[instructor] if instructor else [],
             corpus=corpus,
@@ -243,6 +245,7 @@ def build(root: Path = ROOT) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         "school_begins_future": future,
         "subject_distribution": subject_counts,
         "poster_variant_distribution": variant_counts,
+        "format_distribution": common.format_distribution(items),
         **direction.summarize(items),
     }
     return items, report

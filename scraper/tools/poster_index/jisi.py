@@ -19,6 +19,7 @@ RECORD_BATCHES = [
     ROOT / "output/incremental/20260928/domestic/processed/records.jsonl",
     ROOT / "output/incremental/20260928/sou_tools/processed/records.jsonl",
 ]
+TYPEID_MAP = json.loads((Path(__file__).resolve().parent / "typeid_map.json").read_text(encoding="utf-8"))["map"]
 ORGANIZED_MANIFESTS = sorted(
     {*(ROOT.glob("output/incremental/*/reports/organized_assets_manifest.json")),
       *(ROOT.glob("output/incremental/*/*/reports/organized_assets_manifest.json"))}
@@ -109,6 +110,8 @@ def build(root: Path = ROOT) -> tuple[list[dict[str, Any]], dict[str, Any]]:
             poster_files.append(f)
 
     items: list[dict[str, Any]] = []
+    pt_sources: dict[str, int] = {}
+    pt_pending: list[dict[str, str]] = []
     missing_posters: list[str] = []
     subject_counts: dict[str, int] = {}
     variant_counts = {"processed": 0, "raw": 0}
@@ -127,6 +130,25 @@ def build(root: Path = ROOT) -> tuple[list[dict[str, Any]], dict[str, Any]]:
             missing_posters.append(rid)
             continue
 
+        # projectType 三级回填：清单 -> raw.types -> typeId 反推（歧义降级待确认）
+        if (entry or {}).get("project_type"):
+            project_type = str(entry["project_type"])
+            pt_source = "manifest"
+        elif str(raw.get("types") or "").strip():
+            project_type = str(raw["types"]).strip()
+            pt_source = "raw_types"
+        else:
+            tm = TYPEID_MAP.get(str(raw.get("typeId") or ""))
+            if tm and not tm.get("ambiguous"):
+                project_type = str(tm["project_type"])
+                pt_source = "typeid_map"
+            else:
+                project_type = ""
+                pt_source = "pending"
+        pt_sources[pt_source] = pt_sources.get(pt_source, 0) + 1
+        if pt_source == "pending":
+            pt_pending.append({"recordId": rid, "title": str(raw.get("name") or ""),
+                               "typeId": str(raw.get("typeId") or "")})
         subject_original = common.map_subject((entry or {}).get("subject")) or "其他"
         tagged = direction.classify(
             str(raw.get("name") or record.get("name") or ""),
@@ -153,7 +175,8 @@ def build(root: Path = ROOT) -> tuple[list[dict[str, Any]], dict[str, Any]]:
             direction=tagged["direction"],
             directionSecondary=tagged["directionSecondary"],
             directionBasis=tagged["directionBasis"],
-            projectType=str((entry or {}).get("project_type") or ""),
+            projectType=project_type,
+            format=common.resolve_format(SUPPLIER, project_type),
             schoolBegins=begins,
             instructors=_instructors(raw),
             corpus={f: raw.get(f) for f in CORPUS_FIELDS if raw.get(f)},
@@ -175,6 +198,9 @@ def build(root: Path = ROOT) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         "poster_variant_distribution": variant_counts,
         "records_per_file": per_file,
         "manifest_entries": len(manifest),
+        "project_type_sources": pt_sources,
+        "project_type_pending": pt_pending,
+        "format_distribution": common.format_distribution(items),
         **direction.summarize(items),
     }
     return items, report

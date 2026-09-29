@@ -101,7 +101,7 @@ class ContractTest(unittest.TestCase):
         item = common.build_item(
             supplier="X", recordId="1", title="t",
             subject="人文社科", subjectSource="override", subjectOriginal="理工科",
-            direction="心理学", directionSecondary=None,
+            direction="心理学", directionSecondary=None, format="小组科研",
             directionBasis={"source": "override", "keyword": None, "rawLabel": None},
             posterVariant="raw", posterPath="/p.jpg", posterSha256="h")
         self.assertEqual(item["direction"], "心理学")
