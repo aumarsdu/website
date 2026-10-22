@@ -138,7 +138,8 @@ def build(root: Path = ROOT) -> tuple[list[dict[str, Any]], dict[str, Any]]:
             continue
         variant_counts[variant] = variant_counts.get(variant, 0) + 1
         begins = (
-            oct_by_id.get(str(record.get("uuid") or ""))
+            common.normalize_date((record.get("raw") or {}).get("startTime"))
+            or oct_by_id.get(str(record.get("uuid") or ""))
             or oct_by_id.get(str(record.get("id") or ""))
             or oct_by_title.get(title)
         )

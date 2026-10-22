@@ -176,7 +176,7 @@ def write_index_and_report(supplier: str, items: list[dict[str, Any]], report: d
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     index_doc = {"supplier": supplier, "generatedAt": now, "items": items}
-    report_doc = {"supplier": supplier, "generatedAt": now, **report}
+    report_doc = {**report, "supplier": supplier, "generatedAt": now}
     paths = []
     for name, doc in ((f"{supplier}.index.json", index_doc), (f"{supplier}.report.json", report_doc)):
         target = OUTPUT_DIR / name

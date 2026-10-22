@@ -16,8 +16,6 @@ MANIFEST = ROOT / "poster" / "_organization_manifest.json"
 RECORD_BATCHES = [
     ROOT / "output/full_refresh/20260703-new-check/domestic/processed/records.jsonl",
     ROOT / "output/full_refresh/20260703-new-check/sou_tools/processed/records.jsonl",
-    ROOT / "output/incremental/20260928/domestic/processed/records.jsonl",
-    ROOT / "output/incremental/20260928/sou_tools/processed/records.jsonl",
 ]
 TYPEID_MAP = json.loads((Path(__file__).resolve().parent / "typeid_map.json").read_text(encoding="utf-8"))["map"]
 ORGANIZED_MANIFESTS = sorted(
@@ -67,10 +65,74 @@ def _load_manifest() -> dict[str, dict[str, Any]]:
     return by_rid
 
 
+def discover_record_batches(root: Path = ROOT) -> tuple[list[Path], list[dict]]:
+    """Keep the frozen full-refresh baseline and admit completed incremental sites."""
+    paths = [p for p in RECORD_BATCHES if p.is_file()]
+    excluded = []
+    for run in sorted((root / "output/incremental").glob("*")):
+        if not run.is_dir():
+            continue
+        summary_path = run / "incremental_summary.json"
+        try:
+            summary = json.loads(summary_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            excluded.append({"run": str(run), "reason": "missing_or_invalid_completion_summary"})
+            continue
+        if not summary.get("finished_at"):
+            excluded.append({"run": str(run), "reason": "run_not_finished"})
+            continue
+        for site in summary.get("sites") or []:
+            name = site.get("site")
+            if name not in {"sou_tools", "domestic"}:
+                excluded.append({"run": str(run), "reason": "unknown_site"})
+                continue
+            site_root = run / name
+            records = site_root / "processed/records.jsonl"
+            selected = site.get("selected_topics", site.get("new_topics", 0))
+            if selected == 0:
+                continue
+            listing, details, assets = site.get("list") or {}, site.get("details") or {}, site.get("assets") or {}
+            reasons = []
+            if listing.get("pages_failed") != 0 or listing.get("errors"):
+                reasons.append("list_failed")
+            for seed in listing.get("seed_summaries") or []:
+                total = seed.get("expected_allPage")
+                if seed.get("errors") or (total is not None and len(seed.get("pages") or []) < int(total)):
+                    reasons.append("list_incomplete")
+            if details.get("detail_missing_ids") != 0 or details.get("details_failed", 0) != 0:
+                reasons.append("details_incomplete")
+            if assets.get("skipped") or "missing_asset_downloads" not in assets:
+                reasons.append("assets_unverified")
+            elif assets["missing_asset_downloads"]:
+                try:
+                    exemptions = json.loads((site_root / "reports/asset_exemptions.json").read_text())
+                    exempt_urls = {x["url"] for x in exemptions if x.get("category") == "http_404_not_found"}
+                    failures = {u for values in (assets.get("failed_urls_by_category") or {}).values() for u in values}
+                    if not failures or not failures <= exempt_urls:
+                        reasons.append("assets_missing_without_404_evidence")
+                except (OSError, ValueError, KeyError, TypeError):
+                    reasons.append("assets_missing_without_404_evidence")
+            if not records.is_file():
+                reasons.append("records_missing")
+            else:
+                try:
+                    rows = [json.loads(line) for line in records.read_text().splitlines() if line.strip()]
+                    if len(rows) != selected or any(not row.get("id") for row in rows):
+                        reasons.append("record_count_or_identity_mismatch")
+                except (OSError, ValueError, TypeError):
+                    reasons.append("records_invalid")
+            if reasons:
+                excluded.append({"run": str(run), "site": name, "reasons": reasons})
+            elif records not in paths:
+                paths.append(records)
+    return paths, excluded
+
+
 def _load_records() -> tuple[list[dict[str, Any]], dict[str, int]]:
     records = []
     per_file: dict[str, int] = {}
-    for path in RECORD_BATCHES:
+    paths, _excluded = discover_record_batches()
+    for path in paths:
         count = 0
         with open(path, encoding="utf-8") as fh:
             for line in fh:

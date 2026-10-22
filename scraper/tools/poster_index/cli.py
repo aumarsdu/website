@@ -14,6 +14,8 @@ SUPPLIERS = {"集思未来": jisi, "HIREP": hirep, "中科浩博": zhongke}
 
 
 def cmd_index(args: argparse.Namespace) -> int:
+    if args.output_dir:
+        common.OUTPUT_DIR = Path(args.output_dir).expanduser().resolve()
     names = list(SUPPLIERS) if args.supplier == "all" else [args.supplier]
     for name in names:
         module = SUPPLIERS.get(name)
@@ -72,6 +74,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_index = sub.add_parser("index", help="生成或重建索引与报告")
     p_index.add_argument("--supplier", choices=[*SUPPLIERS, "all"], required=True)
+    p_index.add_argument("--output-dir", default=Path(__file__).resolve().parents[1] / "candidates",
+                        help="Candidate directory; index never defaults to overwriting formal indexes")
 
     p_find = sub.add_parser("find", help="按条件列出课题")
     p_find.add_argument("--supplier", choices=[*SUPPLIERS, "all"], required=True)
