@@ -1,14 +1,31 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTimelineStore } from '../../store/timelineStore';
 import { TimelineStageCard } from './TimelineStageCard';
 import { TimelineCta } from './TimelineCta';
 import { Share2, Clock, MapPin, GraduationCap, Sparkles } from 'lucide-react';
 import { toPng } from 'html-to-image';
+import { createQrDataUrl } from '../../utils/qr';
+
+const SHARE_QR_PAYLOAD = 'https://example.com';
 
 export const TimelineResult: React.FC = () => {
   const { timelineData, formData, isGenerated } = useTimelineStore();
   const resultRef = useRef<HTMLDivElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [qrSrc, setQrSrc] = useState('');
+
+  // 本地生成分享图水印二维码（数据不出设备），避免请求外部服务。
+  useEffect(() => {
+    let cancelled = false;
+    createQrDataUrl(SHARE_QR_PAYLOAD)
+      .then((url) => {
+        if (!cancelled) setQrSrc(url);
+      })
+      .catch((error) => console.error('生成二维码失败:', error));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   if (!isGenerated || !timelineData) {
     return null;
@@ -133,12 +150,14 @@ export const TimelineResult: React.FC = () => {
             </div>
           </div>
           <div className="w-20 h-20 bg-white p-1 rounded-lg border border-slate-200 shadow-sm">
-            {/* Placeholder QR Code for exported image */}
-            <img 
-              src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://example.com" 
-              alt="QR" 
-              className="w-full h-full opacity-50 grayscale"
-            />
+            {/* 本地生成的分享图水印二维码 */}
+            {qrSrc && (
+              <img
+                src={qrSrc}
+                alt="QR"
+                className="w-full h-full opacity-50 grayscale"
+              />
+            )}
           </div>
         </div>
       </div>

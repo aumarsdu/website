@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Lock, FileText, Download, X } from 'lucide-react';
+import { createQrDataUrl } from '../../utils/qr';
+
+const WECHAT_QR_PAYLOAD = 'https://example.com/add-wechat';
 
 interface Props {
   type: 'mid-lock' | 'bottom-download';
@@ -7,6 +10,20 @@ interface Props {
 
 export const TimelineCta: React.FC<Props> = ({ type }) => {
   const [showModal, setShowModal] = useState(false);
+  const [qrSrc, setQrSrc] = useState('');
+
+  // 本地生成二维码（数据不出设备），结果渲染后即可就绪。
+  useEffect(() => {
+    let cancelled = false;
+    createQrDataUrl(WECHAT_QR_PAYLOAD)
+      .then((url) => {
+        if (!cancelled) setQrSrc(url);
+      })
+      .catch((error) => console.error('生成二维码失败:', error));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleCtaClick = () => {
     setShowModal(true);
@@ -38,13 +55,15 @@ export const TimelineCta: React.FC<Props> = ({ type }) => {
           </div>
 
           <div className="bg-slate-50 rounded-2xl p-6 flex flex-col items-center justify-center border border-slate-100">
-            {/* Placeholder for QR Code */}
+            {/* 本地生成的二维码 */}
             <div className="w-40 h-40 bg-white rounded-xl shadow-sm border border-slate-200 p-2 mb-4">
-              <img 
-                src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://example.com/add-wechat" 
-                alt="WeChat QR Code" 
-                className="w-full h-full object-cover rounded-lg opacity-80"
-              />
+              {qrSrc && (
+                <img
+                  src={qrSrc}
+                  alt="WeChat QR Code"
+                  className="w-full h-full object-cover rounded-lg opacity-80"
+                />
+              )}
             </div>
             <p className="text-sm font-medium text-slate-700">微信扫码，立即解锁</p>
           </div>
