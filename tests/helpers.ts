@@ -1,23 +1,17 @@
 import type { Browser } from '@e2e-dev/web';
 
-// The QR placeholder service the app embeds in timeline CTA / share images.
-const QR_SERVICE = /^https:\/\/api\.qrserver\.com\//;
-// Anything on the open internet other than the app origin and the stubbed QR
-// service (the negative lookahead keeps those two out of this route's hands).
-const EXTERNAL = /^https?:\/\/(?!(127\.0\.0\.1:4320)|api\.qrserver\.com)/;
-
-const QR_STUB_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>';
+// Anything on the open internet other than the app's own origin is aborted.
+// Timeline QR codes are generated locally as data: URLs, so the app must not
+// reach any external host — a regression back to remote assets (e.g. the
+// former api.qrserver.com images) fails loudly instead of leaking user data.
+const EXTERNAL = /^https?:\/\/(?!127\.0\.0\.1:4320)/;
 
 /**
- * Keeps tests off the network: the app's own origin loads normally, the QR
- * placeholder service is answered with a local stub, and every other
- * external request is aborted. Register before `app.open()` — the routes
- * hold for the rest of the attempt.
+ * Keeps tests off the network: the app's own origin loads normally and every
+ * external request is aborted. Register before `app.open()` — the route
+ * holds for the rest of the attempt.
  */
 export async function isolateNetwork(browser: Browser): Promise<void> {
-  await browser.route(QR_SERVICE, async (route) => {
-    await route.fulfill({ body: QR_STUB_SVG, contentType: 'image/svg+xml' });
-  });
   await browser.route(EXTERNAL, async (route) => {
     await route.abort();
   });
