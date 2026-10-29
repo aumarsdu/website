@@ -1,0 +1,31 @@
+# OCR 仓库局部忽略规则
+# monorepo 根 .gitignore 只有通用 output/ 与 OCR/.venv_*/，
+# OCR/data/input/ 未被忽略 —— git add -A 会把含学生 PII 的原始图片带进版本库。
+
+# 原始图片与识别产物：一律不进版本库（含姓名、院校、录取年份等 PII）
+data/input/
+data/output/
+data/golden/images/
+
+# 批量识别产物（落在仓内时兜底）
+results.jsonl
+review_queue.csv
+*.ocr.jsonl
+summary.json
+
+# 环境与缓存
+# 注意：gitignore 不支持行尾注释，# 必须单独成行
+.venv_*/
+# 兼容 venv 被做成符号链接的情形（目录规则不匹配符号链接）
+.venv_*
+__pycache__/
+*.py[cod]
+.DS_Store
+
+# Swift 编译产物（体积大且可重建）
+.build/
+.swiftpm/
+
+# 注意：不要忽略 data/golden/manifest.csv
+#      金标准清单只存路径与人工标注结论，不含图片本体，必须随代码进版本库，
+#      否则回归基线无法在换机器/换人后复现。

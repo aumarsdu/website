@@ -1,1 +1,8 @@
-paddleocr[doc-parser]
+# PaddleOCR 运行环境（锁定版本，保证回归基线可复现）
+#
+# 已验证组合：paddleocr 3.7.0 + paddlepaddle 3.3.0 + Python 3.12.12（macOS / M1 Max / CPU）
+# 升级前必须先跑 `make golden-check`，确认关键实体命中率未下降。
+#
+# 安装：make paddle-install
+paddleocr==3.7.0
+paddlepaddle==3.3.0
