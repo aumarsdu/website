@@ -1,0 +1,301 @@
+--- /dev/null
++++ inventory.py
+@@ -0,0 +1,108 @@
++"""T01 metadata inventory. Explicit inputs only; never copy source contents."""
++
++from __future__ import annotations
++
++import argparse
++import hashlib
++import json
++import os
++import stat
++from pathlib import Path
++from typing import TypedDict
++
++
++class InventoryError(ValueError):
++    """A source failed the declared inventory boundary."""
++
++
++class FileEntry(TypedDict):
++    relative_path: str
++    sha256: str
++    byte_size: int
++
++
++def safe_path(root: Path, relative: str) -> Path:
++    """Resolve an explicit regular file within its approved root."""
++    rel = Path(relative)
++    if rel.is_absolute() or ".." in rel.parts:
++        raise InventoryError("path_out_of_scope")
++    if any(part.startswith(".") for part in rel.parts):
++        raise InventoryError("hidden_input_excluded")
++    if rel.suffix.lower() not in {".jsonl", ".json", ".csv", ".md", ".sql", ".py"}:
++        raise InventoryError("unsupported_input_format")
++    resolved_root = root.resolve(strict=True)
++    try:
++        resolved = (resolved_root / rel).resolve(strict=True)
++    except FileNotFoundError as exc:
++        raise InventoryError("input_missing") from exc
++    if not resolved.is_relative_to(resolved_root):
++        raise InventoryError("path_out_of_scope")
++    if not resolved.is_file():
++        raise InventoryError("input_not_regular")
++    return resolved
++
++
++def fingerprint(root: Path, relative: str) -> FileEntry:
++    """Hash without printing values; reject detectable concurrent mutations."""
++    path = safe_path(root, relative)
++    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
++    with os.fdopen(os.open(path, flags), "rb") as handle:
++        before = os.fstat(handle.fileno())
++        if not stat.S_ISREG(before.st_mode):
++            raise InventoryError("input_not_regular")
++        digest = hashlib.sha256()
++        size = 0
++        while chunk := handle.read(1024 * 1024):
++            digest.update(chunk)
++            size += len(chunk)
++        after = os.fstat(handle.fileno())
++    current = safe_path(root, relative)
++    current_stat = current.stat()
++    fields = ("st_dev", "st_ino", "st_size", "st_mtime_ns", "st_ctime_ns")
++    if (
++        current != path
++        or any(getattr(before, x) != getattr(after, x) for x in fields)
++        or any(getattr(after, x) != getattr(current_stat, x) for x in fields)
++        or size != after.st_size
++    ):
++        raise InventoryError("input_changed")
++    return {"relative_path": relative, "sha256": digest.hexdigest(), "byte_size": size}
++
++
++def register(root: Path, requested: list[str], approved: list[str]) -> list[FileEntry]:
++    """An explicit allowlist excludes delivery copies even inside the root."""
++    if not requested:
++        raise InventoryError("empty_input")
++    if len(requested) != len(set(requested)):
++        raise InventoryError("duplicate_input")
++    if not set(requested).issubset(approved):
++        raise InventoryError("input_not_registered")
++    return [fingerprint(root, path) for path in requested]
++
++
++def verify(root: Path, entries: list[FileEntry]) -> None:
++    """Recheck every sealed source immediately before dependent work."""
++    for entry in entries:
++        if fingerprint(root, entry["relative_path"]) != entry:
++            raise InventoryError("input_changed")
++
++
++def main() -> int:
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--root", type=Path, required=True)
++    parser.add_argument("--input", action="append", required=True)
++    parser.add_argument("--dry-run", action="store_true", required=True)
++    args = parser.parse_args()
++    inputs: list[str] = args.input
++    try:
++        entries = register(args.root, inputs, inputs)
++    except (InventoryError, OSError) as exc:
++        code = str(exc) if isinstance(exc, InventoryError) else "input_io_error"
++        print(json.dumps({"status": "rejected", "error": code}))
++        return 1
++    print(json.dumps({"status": "inventoried", "files": entries}, ensure_ascii=False))
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+--- /dev/null
++++ test_inventory.py
+@@ -0,0 +1,92 @@
++"""Offline T01 negative cases; all fixtures are synthetic."""
++
++import tempfile
++import unittest
++from pathlib import Path
++from unittest.mock import patch
++
++from inventory import InventoryError, fingerprint, register, safe_path, verify
++
++
++class InventoryTests(unittest.TestCase):
++    def setUp(self) -> None:
++        self.temp = tempfile.TemporaryDirectory()
++        self.addCleanup(self.temp.cleanup)
++        self.base = Path(self.temp.name)
++        self.root = self.base / "source"
++        self.root.mkdir()
++        (self.root / "records.jsonl").write_text('{"id":"synthetic"}\n')
++
++    def test_explicit_file_is_stable(self) -> None:
++        entries = register(self.root, ["records.jsonl"], ["records.jsonl"])
++        verify(self.root, entries)
++        self.assertEqual(len(entries[0]["sha256"]), 64)
++
++    def test_traversal(self) -> None:
++        with self.assertRaisesRegex(InventoryError, "path_out_of_scope"):
++            safe_path(self.root, "../outside.json")
++
++    def test_absolute_path(self) -> None:
++        with self.assertRaisesRegex(InventoryError, "path_out_of_scope"):
++            safe_path(self.root, str(self.root / "records.jsonl"))
++
++    def test_external_symlink(self) -> None:
++        outside = self.base / "outside.json"
++        outside.write_text("{}")
++        (self.root / "link.json").symlink_to(outside)
++        with self.assertRaisesRegex(InventoryError, "path_out_of_scope"):
++            safe_path(self.root, "link.json")
++
++    def test_changed_after_inventory(self) -> None:
++        entry = fingerprint(self.root, "records.jsonl")
++        (self.root / "records.jsonl").write_text('{"id":"changed"}\n')
++        with self.assertRaisesRegex(InventoryError, "input_changed"):
++            verify(self.root, [entry])
++
++    def test_replacement_during_inventory(self) -> None:
++        original_safe_path = safe_path
++        calls = 0
++
++        def replace_before_recheck(root: Path, relative: str) -> Path:
++            nonlocal calls
++            calls += 1
++            if calls == 2:
++                replacement = self.root / "new.jsonl"
++                replacement.write_text('{"id":"replacement"}\n')
++                replacement.replace(self.root / "records.jsonl")
++            return original_safe_path(root, relative)
++
++        with (
++            patch("inventory.safe_path", side_effect=replace_before_recheck),
++            self.assertRaisesRegex(InventoryError, "input_changed"),
++        ):
++            fingerprint(self.root, "records.jsonl")
++
++    def test_empty_request(self) -> None:
++        with self.assertRaisesRegex(InventoryError, "empty_input"):
++            register(self.root, [], [])
++
++    def test_delivery_copy_excluded(self) -> None:
++        (self.root / "delivery.jsonl").write_text("{}\n")
++        with self.assertRaisesRegex(InventoryError, "input_not_registered"):
++            register(self.root, ["delivery.jsonl"], ["records.jsonl"])
++
++    def test_hidden_and_secret_file_excluded(self) -> None:
++        with self.assertRaisesRegex(InventoryError, "hidden_input_excluded"):
++            safe_path(self.root, ".env")
++
++    def test_archive_excluded(self) -> None:
++        with self.assertRaisesRegex(InventoryError, "unsupported_input_format"):
++            safe_path(self.root, "delivery.zip")
++
++    def test_duplicate_requested_path(self) -> None:
++        with self.assertRaisesRegex(InventoryError, "duplicate_input"):
++            register(self.root, ["records.jsonl"] * 2, ["records.jsonl"])
++
++    def test_missing_file(self) -> None:
++        with self.assertRaisesRegex(InventoryError, "input_missing"):
++            safe_path(self.root, "missing.jsonl")
++
++
++if __name__ == "__main__":
++    unittest.main()
+--- /dev/null
++++ pyrightconfig.json
+@@ -0,0 +1,5 @@
++{
++  "include": ["inventory.py", "test_inventory.py"],
++  "pythonVersion": "3.12",
++  "typeCheckingMode": "basic"
++}
+--- /dev/null
++++ README.md
+@@ -0,0 +1,29 @@
++# 2026-09-08 Goal 的隔离候选与证据
++
++对应 Spec/Plan：`../../../docs/superpowers/specs/2026-09-08-research-project-database-{spec,plan}.md`。
++
++本目录仅由当前侧对话 Writer 修改；没有改写旧抓取器、旧暂存或数据库。
++任务真实状态见 `task_state.json`；执行结果见 `evidence/`。本目录不是第二份长期计划。
++
++T01 候选 `inventory.py` 只登记显式输入的相对路径、字节数和 SHA-256，不复制正文。
++路径防护用于可信本地批次盘点，不宣称能抵抗具备本机写权限的恶意并发修改；
++后续导入仍需封存输入并在消费前复查。`--dry-run` 不写文件、不连接数据库。
++
++在本目录执行：
++
++```bash
++python3 -B -m unittest discover -s . -p 'test_inventory.py' -v
++ruff check inventory.py test_inventory.py
++ruff format --check inventory.py test_inventory.py
++pyright --project pyrightconfig.json
++```
++
++示例（使用合成或已授权显式来源路径）：
++
++```bash
++python3 -B inventory.py --root /approved/source --input records.jsonl --dry-run
++```
++
++独立复核前禁止将 T01 或其输入选择标为 DONE；不得提前进行依赖任务写入。
++复核者需逐项核对 source_registry、baseline、pilot_manifest、测试证据及来源排除规则。
++该侧对话禁止子 Agent，因此不伪造 Fresh-context Review，也不调用其他任务代审。
+--- /dev/null
++++ quality_commands.md
+@@ -0,0 +1,18 @@
++# T01 质量基线与执行命令
++
++工作目录：本文件所在目录。版本锁定值见 `environment.json`；未安装新依赖。
++
++| 检查 | 精确命令 | 范围 / 完成规则 |
++| --- | --- | --- |
++| T01 单元 / 反例 | `python3 -B -m unittest discover -s . -p 'test_inventory.py' -v` | 12 项合成用例全部通过 |
++| lint | `ruff check inventory.py test_inventory.py` | 两个新模块零违规 |
++| format | `ruff format --check inventory.py test_inventory.py` | 两个模块均通过 |
++| typecheck | `pyright --project pyrightconfig.json` | 零 error |
++
++后续 contract-unit、adapter-fixture、postgres-integration、projection-query、recovery-e2e 尚无实现，状态 NOT_RUN；由各任务补齐真实命令，不把本单元测试命令冒充全套检查。
++
++现有验证器基线：当前代码对空输入和缺供应商父表均返回 0，按新 Spec 均为 FAIL_BASELINE。复现使用临时合成 JSONL，无旧库写入，证据在 `evidence/legacy_baseline.json`。这是 T08 的既有缺陷，不在 T01 顺带修复。
++
++运行中曾发现一处格式问题及一处嵌套 with lint 问题，均最小修复后重跑四项检查；最终结果见 `evidence/validation.json`。没有删除测试或降低门槛。
++
++输入登记只说明文件在清单内、哈希稳定，不说明输入为业务全量、数据正确、归档仍最新或已独立确认。未知观察顺序保持 unknown。
+--- /dev/null
++++ GOAL.md
+@@ -0,0 +1,31 @@
++# 五源科研项目库执行 Goal — 当前侧对话
++
++目标：按当前 Spec/Plan 推进 T01–T13，直到可验证 DONE，或所有剩余项进入 WAITING_OWNER / BLOCKED / UNKNOWN。D01 为已定义的独立后续范围，单独登记但不扩大首期。
++
++本轮用户 Goal 已授权必要本地实施和验证；旧 Spec“仅授权文档”的历史说明不作为重复索要实施许可的理由。该目录为 Plan 认可的本地等效隔离：一个 Writer、新代码/证据/候选数据根，不改共享抓取器和旧数据库，不创建 Git 同步交付。
++
++## 当前事实
++
++- Git 根为 knowledge-legacy，HEAD 与本地 origin/main 值见 baseline.json；目标旧 research_db 文件无本轮开始前 diff；其他脏文件保留。
++- GitHub 当前查询返回开放/草稿 PR 0、Issue 0；仅 PR #1 已合并，属于 GPA/留学费用计算器；CI 返回 5 条历史官网部署 success，不构成科研库证据。
++- 主任务“重新评估科研项目数据库方案”只完成文档，目前 idle；另一“0814｜功能｜科研项目数据库”在 Projects/helipei，使用不同 Spec，未发现它覆盖本次任务的证据。未交互任何子 Agent。
++- 远程 main 读取所在复合命令被自动审批策略拒绝（需要审批而当前禁止请求审批），没有重试/绕过；远程最新 SHA 记 UNKNOWN。本地-only 候选不依赖远程合并，因此不以此阻塞已授权本地盘点。
++- 本地 Postgres 客户端/服务二进制为 16.15，未连接或启动旧库、未创建运行中候选实例。部署不属于首期。
++
++## DAG 与关键路径
++
++`T01 → T02 → T03 → T08 → {T04, T05 → {T06, T07}} → T09 → T10 → T11 → T12 → T13`
++
++实际精确依赖以 task_state.json 为准。关键阻塞切点为 T01 的独立复核。无工期估计，不能声称已经计算时间意义的最长路径。
++
++理论可并行：T04 与 T05；T06 与 T07。但本轮 WIP=1，且共用证据/素材边界时不并行写入。没有 PR/merge/deploy 依赖；外部依赖是独立评审者，后续 D01 还需明确发布对象和渠道。
++
++## 已执行与停止依据
++
++已完成 T01 候选：输入登记/哈希、样本位置、环境、代码隔离、路径测试与当前失败基线。候选选择尚未独立审查，不能将 T01 标 DONE。原始正文未复制。
++
++本侧对话明确禁止子 Agent；Spec G-R 与用户 Review Rule 又要求规则/校验器由非实现者复核。实现者不能自行批准路径防护和输入映射。因此 T01 进入 WAITING_OWNER，依赖它的任务 BLOCKED。没有其他 READY 节点，不写 T02 绕过依赖。
++
++精确 Owner Gate：由 Owner 作为非实现者复核 `source_registry.json` 的纳入/排除、`pilot_manifest.json` 的样本代表性与原图关联，以及 `evidence/candidate.patch` 和测试反例；给出 PASS 或具体修订项。推荐保留该门槛。也可在允许独立审查者的主任务中完成审查，但当前侧对话不会自行创建、派发或调用子 Agent。
++
++后续仅在收到有效独立结论后重查 Spec/输入哈希、主任务状态和 Git/PR/CI，重新计算 DAG。不得把本文件当做预约任务或后台持续执行承诺。

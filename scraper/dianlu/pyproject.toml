@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=70", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dianedu-archiver"
+version = "0.1.0"
+description = "Authorized full-site archive and structured crawler for DianEdu public frontend data."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "beautifulsoup4>=4.12",
+  "httpx>=0.27",
+  "lxml>=5.0",
+  "playwright>=1.44",
+  "pydantic>=2.7",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+]
+
+[project.scripts]
+dianedu-archiver = "dianedu_archiver.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["dianedu_archiver*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

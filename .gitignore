@@ -1,0 +1,143 @@
+# OS
+.DS_Store
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+*.venv*/
+venv/
+myenv/
+.venv_*/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+
+# Node
+node_modules/
+dist/
+build/
+.cache/
+.build/
+
+# Local tool state
+.agents/
+.trae/
+
+# Crawler outputs
+output/
+output_*/
+*/output/
+*/output_*/
+
+# Local scraper workspaces: code is tracked, data/交付物 never are
+scraper/data_staging/
+scraper/.superpowers/
+scraper/.playwright-mcp/
+scraper/**/.playwright-mcp/
+scraper/**/.reticle/
+scraper/**/Poster/
+scraper/**/poster/
+scraper/**/tmp/
+scraper/**/data/
+scraper/**/archive/
+scraper/**/*.csv
+scraper/**/*.sqlite
+scraper/**/*.sqlite3
+scraper/**/*.ndjson
+scraper/**/*2026年*
+scraper/盐趣/盐趣7-9月项目合集/
+scraper/集思未来/yt_audio_*
+scraper/集思未来/转录结果.md
+scraper/HIREP/HIREP-海报处理-样张*/
+scraper/HIREP/poster_cleanup_inspection/**/*.jpg
+scraper/HIREP/poster_cleanup_inspection/**/*.png
+scraper/HIREP/poster_cleanup_inspection/**/processing_report.json
+scraper/HIREP/poster_cleanup_inspection/**/processing_results.jsonl
+
+# Crawler payloads (large archives, never commit)
+scraper/**/*.zip
+
+# ML model assets (large binaries, never commit)
+models/
+easyocr_models/
+
+# Frontend build outputs
+knowledge/helipei-official/tools/
+
+# Temporary work areas
+temp_*/
+
+# Logs
+*.log
+logs/
+
+# ===== 2026-10-30 仓库重建：抓取产物全面排除 =====
+# 旧 .git 历史归档移至仓库外：~/Workspace/knowledge-legacy.git-archive-20261030
+.git-archive*/
+# 原则不变：code is tracked, data/交付物 never are。
+# 黑名单只作用于 scraper* 目录，knowledge/helipei-official 的网站资源（logo/icon）不受影响。
+
+# 嵌套的独立 git 仓库（各自独立版本管理，不作为 submodule）
+jingsai-workshop/
+study-abroad-enhancement-workshop/
+helipei-official/jingsai-workshop/
+helipei-official/study-abroad-enhancement-workshop/
+
+# 纯产物目录（无代码）
+scraper/task_runs/
+scraper/集思未来/
+scraper/采集批次/
+scraper/.redact_tmp/
+
+# scraper 系目录的二进制产物黑名单
+scraper*/**/*.pdf
+scraper*/**/*.jpg
+scraper*/**/*.jpeg
+scraper*/**/*.JPG
+scraper*/**/*.png
+scraper*/**/*.PNG
+scraper*/**/*.gif
+scraper*/**/*.webp
+scraper*/**/*.heic
+scraper*/**/*.avif
+scraper*/**/*.tif
+scraper*/**/*.tiff
+scraper*/**/*.bmp
+scraper*/**/*.psd
+scraper*/**/*.mp4
+scraper*/**/*.mov
+scraper*/**/*.avi
+scraper*/**/*.mp3
+scraper*/**/*.wav
+scraper*/**/*.m4a
+scraper*/**/*.aac
+scraper*/**/*.flac
+scraper*/**/*.doc
+scraper*/**/*.docx
+scraper*/**/*.xls
+scraper*/**/*.xlsx
+scraper*/**/*.ppt
+scraper*/**/*.pptx
+scraper*/**/*.pages
+scraper*/**/*.key
+
+# 抓取数据文件（json/jsonl 属于产物数据；被追踪的配置 json 见下方白名单）
+scraper*/**/*.json
+scraper*/**/*.jsonl
+
+# 白名单：恢复被追踪的配置/索引 json（在黑名单之后，顺序不能颠倒）
+!scraper/HIREP/config/api_targets.example.json
+!scraper/HIREP/config/pbl_api_targets.example.json
+!scraper/HIREP/poster_cleanup_inspection/other_types_audit_20260710/sample_manifest.json
+!scraper/HIREP/poster_cleanup_inspection/rects_scan_text_bottom_1520.json
+!scraper/HIREP/poster_cleanup_inspection/rects_type_top_1700.json
+!scraper/tools/poster_index/direction_taxonomy.json
+!scraper/tools/poster_index/format_map.json
+!scraper/tools/poster_index/typeid_map.json

@@ -1,0 +1,32 @@
+{
+  "list_endpoints": [],
+  "detail_endpoints": [
+    {
+      "name": "pbl-poster-to-attachment-id",
+      "standalone": true,
+      "method": "POST",
+      "url": "https://edu4-crm-api.neoschool.com/sdm/mtc/pubController/getPoster",
+      "headers": {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Origin": "https://pbl.hirepglobal.com",
+        "Referer": "https://pbl.hirepglobal.com/"
+      },
+      "data": "courseExtendId=1960539153064857602&productPackageId=1993207391464779777&h5Type=1&industryPoster=2038901940249370626",
+      "followups": [
+        {
+          "name": "pbl-attachment-metadata",
+          "method": "POST",
+          "url": "https://edu4-crm-api.neoschool.com/bus/ath/resAttachment/noToken/getResAttachment",
+          "headers": {
+            "Content-Type": "application/json",
+            "Origin": "https://pbl.hirepglobal.com",
+            "Referer": "https://pbl.hirepglobal.com/"
+          },
+          "params": {
+            "id": "{data}"
+          }
+        }
+      ]
+    }
+  ]
+}

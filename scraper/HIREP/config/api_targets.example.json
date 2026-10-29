@@ -1,0 +1,34 @@
+{
+  "list_endpoints": [
+    {
+      "name": "pbl-public-list-sample",
+      "method": "GET",
+      "url": "https://edu4-crm-api.neoschool.com/sdm/mtc/pubController/pageV2",
+      "params": {
+        "page": 1,
+        "pageSize": 20
+      },
+      "pagination": {
+        "page_param": "page",
+        "page_size_param": "pageSize",
+        "page_size": 20,
+        "start_page": 1
+      }
+    }
+  ],
+  "detail_endpoints": [
+    {
+      "name": "pbl-public-detail-sample",
+      "method": "GET",
+      "url": "https://edu4-crm-api.neoschool.com/sdm/mtc/pubController/get",
+      "params": {
+        "id": "{id}"
+      },
+      "id_fields": [
+        "id",
+        "projectId",
+        "courseExtendId"
+      ]
+    }
+  ]
+}

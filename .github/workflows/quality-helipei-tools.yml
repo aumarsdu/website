@@ -1,0 +1,38 @@
+name: Quality - helipei tools
+
+on:
+  pull_request:
+    paths:
+      - "knowledge/helipei-official/tools-src/**"
+      - "justfile"
+      - ".github/workflows/quality-helipei-tools.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: quality-helipei-tools-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  helipei-tools:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: knowledge/helipei-official/tools-src
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: knowledge/helipei-official/tools-src/package-lock.json
+
+      - run: npm ci
+      - run: npm run check
+      - run: npm run lint
+      - run: npm run build

@@ -1,0 +1,4 @@
+interface:
+  display_name: "HIREP-CIS海报处理"
+  short_description: "精准定位并无痕移除学术海报二维码、日期与说明等指定元素信息"
+  default_prompt: "使用 $hirep-cis-poster-processing 分析这张海报并无痕移除指定二维码和日期信息。"

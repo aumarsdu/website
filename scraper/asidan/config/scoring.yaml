@@ -1,0 +1,20 @@
+scoring:
+  marketing_priority:
+    admissions_value_weight: 0.25
+    urgency_weight: 0.20
+    differentiation_weight: 0.20
+    content_potential_weight: 0.20
+    sales_difficulty_inverse_weight: 0.10
+    risk_inverse_weight: 0.05
+  urgency:
+    deadline_within_14_days: 100
+    deadline_within_30_days: 80
+    deadline_within_60_days: 60
+    deadline_unknown: 30
+  content_potential:
+    has_clear_target_student: 20
+    has_strong_institution: 20
+    has_deadline: 15
+    has_certificate_or_output: 15
+    has_pain_point_angle: 20
+    has_pdf_material: 10

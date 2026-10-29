@@ -1,0 +1,37 @@
+allowed_domains:
+  - seedasdan.com
+  - www.seedasdan.com
+  - ma.seedasdan.com
+  - ss.seedasdan.com
+  - epq.seedasdan.com
+  - xlab.seedasdan.com
+  - volunteer.seedasdan.com
+  - abs.seedasdan.com
+  - ieo.seedasdan.com
+  - grc.seedasdan.com
+  - course.seedasdan.com
+  - cognia.seedasdan.com
+  - online.seedasdan.com
+  - research-publication.seedasdan.com
+  - seed-static.seedasdan.com
+  - seedasdan.asia
+  - www.seedasdan.asia
+  - seedasdan.org
+  - www.seedasdan.org
+blocked_patterns:
+  - "/wp-admin/"
+  - "wp-login.php"
+  - "/login"
+  - "/register"
+  - "/cart"
+  - "/checkout"
+  - "/payment"
+  - "/order"
+  - "/my-account"
+  - "replytocom="
+  - "preview="
+  - "/feed/"
+  - "/comments/"
+  - "/trackback/"
+  - "?s="
+  - "/search"

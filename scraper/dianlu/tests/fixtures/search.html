@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>DianEdu Search</title>
+  <link rel="canonical" href="https://www.dianedu.com/Search">
+</head>
+<body>
+  <form action="/Search" method="get">
+    <select name="city"><option value="">Location</option><option value="shanghai">Shanghai</option></select>
+    <select name="programType"><option value="">Type of program</option><option value="research">Research</option></select>
+    <input name="keywords" placeholder="Keywords" value="">
+    <button>Search</button>
+  </form>
+  <section>
+    <h2>HOT Search</h2>
+    <a href="/Search?keywords=biology">Biology</a>
+    <a href="/Search?keywords=summer">Summer School</a>
+  </section>
+  <a href="/projects/biology-research">Biology Research Project</a>
+  <img src="/assets/logo.png">
+</body>
+</html>

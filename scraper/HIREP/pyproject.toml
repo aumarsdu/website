@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=70", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sou-crawler"
+version = "0.1.0"
+description = "Authorized SPA/H5 API discovery and full-data crawler for SOU/HIREP public data."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "httpx>=0.27",
+  "playwright>=1.44",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+]
+
+[project.scripts]
+sou-crawler = "sou_crawler.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["sou_crawler*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

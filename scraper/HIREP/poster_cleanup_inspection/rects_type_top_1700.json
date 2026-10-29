@@ -1,0 +1,8 @@
+{
+  "海报.jpg": [
+    {"left": 850, "top": 55, "right": 1030, "bottom": 245, "label": "qr-and-scan-text"}
+  ],
+  "海报-2.jpg": [
+    {"left": 850, "top": 55, "right": 1030, "bottom": 245, "label": "qr-and-scan-text"}
+  ]
+}

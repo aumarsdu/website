@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>科研项目后台</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="/admin.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <div>
+          <h1>科研项目后台</h1>
+          <p>控制哪些项目在网页前端展示，隐藏项目仍保留在内部数据库中。</p>
+        </div>
+        <nav>
+          <a href="/public/" target="_blank">前端预览</a>
+        </nav>
+      </header>
+
+      <section class="summary-strip" aria-label="数据库摘要">
+        <div><span id="summary-total">0</span><small>全部项目</small></div>
+        <div><span id="summary-visible">0</span><small>前端显示</small></div>
+        <div><span id="summary-hidden">0</span><small>未显示</small></div>
+        <div><span id="summary-providers">0</span><small>项目方</small></div>
+      </section>
+
+      <section class="controls" aria-label="项目筛选">
+        <label class="search">
+          <span>搜索</span>
+          <input id="q" type="search" placeholder="项目、教授、学校、学科" />
+        </label>
+        <label>
+          <span>显示状态</span>
+          <select id="visibility">
+            <option value="all">全部</option>
+            <option value="visible">前端显示</option>
+            <option value="hidden">不显示</option>
+          </select>
+        </label>
+        <label>
+          <span>项目方</span>
+          <select id="provider"></select>
+        </label>
+        <label>
+          <span>来源</span>
+          <select id="source"></select>
+        </label>
+        <button id="refresh" type="button">刷新</button>
+      </section>
+
+      <section class="layout">
+        <section class="list-panel">
+          <div class="list-head">
+            <strong>项目列表</strong>
+            <span id="page-meta"></span>
+          </div>
+          <div id="project-list" class="project-list"></div>
+          <div class="pager">
+            <button id="prev-page" type="button">上一页</button>
+            <button id="next-page" type="button">下一页</button>
+          </div>
+        </section>
+
+        <aside class="detail-panel">
+          <article id="project-detail" class="detail"></article>
+        </aside>
+      </section>
+    </main>
+    <script src="/admin.js"></script>
+  </body>
+</html>
